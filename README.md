@@ -2,7 +2,7 @@
 
 Reproducibility package for a 1 km analysis of post-fire forest resilience across 11 western U.S. states. The publication workflow links three complementary response dimensions (Resistance, integrated recovery, and post-fire stability) to environmental and human drivers using random-forest transferability tests, OLS spatial diagnostics, GWR/MGWR, and EPA Level III ecoregion management zoning.
 
-This directory is a **local GitHub-ready draft**. It has not been uploaded or made public.
+This repository is a **private GitHub release draft**. It has been uploaded for review but has not been made public.
 
 ## Repository contents
 
