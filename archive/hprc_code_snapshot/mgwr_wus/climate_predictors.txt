@@ -1,0 +1,8 @@
+CLIM_pr_sum_pre_z
+CLIM_eto_sum_pre_z
+CLIM_tmmn_mean_pre_z
+CLIM_hot_days_35C_pre_z
+CLIM_aridity_pre_z
+CLIM_aridity_post_z
+CLIM_tmmx_std_pre_z
+CLIM_tmmx_std_post_z

@@ -1,0 +1,15 @@
+{
+  "input": "data/processed/westernus_model_table.parquet",
+  "output": "data/splits/westernus_split_assignments.parquet",
+  "block_km": 100.0,
+  "test_size": 0.2,
+  "random_state": 42,
+  "responses": [
+    "Resistance",
+    "T50",
+    "T80",
+    "IRI_good_pow2",
+    "STAB_good_pow2"
+  ],
+  "note": "Eligibility matches the complete-case baseline used by the M1/M2/M3 RF comparison."
+}

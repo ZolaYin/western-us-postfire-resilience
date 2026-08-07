@@ -1,0 +1,5 @@
+TS_elev_m_z
+TS_slope_deg_z
+TS_twi_z
+TS_SOC_0_30cm_z
+FS_EVT_t0agg_resistance_proxy

@@ -1,0 +1,26 @@
+{
+  "input_gpkg": "/path/to/google-drive/共享云端硬盘/Zola Research Storage3/WesternUS_Fire_Ecology_Project_2026-06-15/analysis_and_docs/US_Fire_and_Ecology_Data/WUS_1km/resilience_management_zoning_epa_l3_complete_mgwr_2026-06-30/epa_l3_multiresponse_management_zones.gpkg",
+  "output_dir": "/path/to/google-drive/共享云端硬盘/Zola Research Storage3/WesternUS_Fire_Ecology_Project_2026-06-15/analysis_and_docs/US_Fire_and_Ecology_Data/WUS_1km/resilience_management_zoning_epa_l3_constraint_only_v3_2026-07-06",
+  "effect_definition": "realized local effect: beta * standardized predictor / response standard deviation",
+  "dominance_score": "max(forest_structure_constraint, climate_constraint_score, human_pressure_score)",
+  "forest_dominance_score": "forest_structure_constraint",
+  "forest_direction_ratio": 1.2,
+  "resilience_composite": "equal-weight mean of within-ecoregion ranks for Resistance, IRI_good_pow2, and STAB_good_pow2",
+  "main_dominance_quantile": 0.75,
+  "sensitivity_quantiles": [
+    0.7,
+    0.75,
+    0.8
+  ],
+  "dominant_score_thresholds": {
+    "0.7": 0.3237560092870687,
+    "0.75": 0.3447456712667246,
+    "0.8": 0.35761891352582564
+  },
+  "resilience_priority_thresholds": {
+    "r_low": 0.27564102564102566,
+    "r_high": 0.6987179487179487
+  },
+  "n_l3_ecoregions": 26,
+  "n_candidate_pixels": 56129
+}

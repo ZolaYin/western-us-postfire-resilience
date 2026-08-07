@@ -1,0 +1,5 @@
+HUM_roaddens_r5km_z
+HUM_traildens_r10km_z
+HUM_imperv_near_t0_z
+HUM_popdens_win10km_log_z
+HUM_viirs_near_t0_log_z

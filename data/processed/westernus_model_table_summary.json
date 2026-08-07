@@ -1,0 +1,18 @@
+{
+  "file": "westernus_model_table.parquet",
+  "bytes": 21686697,
+  "sha256": "2675c4b1b24846bdc52f72b2f15f89cd086626cdfca6a654bf28bf6d9897ec7a",
+  "rows": 133409,
+  "columns": 83,
+  "pixel_id_unique": true,
+  "crs_for_x_y": "EPSG:5070",
+  "t0_year_min": 2005,
+  "t0_year_max": 2022,
+  "region_counts": {
+    "CA_med": 45781,
+    "N_Rockies": 32536,
+    "SW_dry": 20337,
+    "S_Rockies": 19482,
+    "PNW": 15273
+  }
+}

@@ -1,0 +1,12 @@
+# MGWR-safe stage 4
+TS_elev_m_z
+TS_slope_deg_z
+TS_twi_z
+TS_SOC_0_30cm_clean_z
+FS_TCC_t0_z
+FS_CBH_t0agg_z
+HUM_popdens_win10km_log_z
+HUM_viirs_near_t0_log_z
+HUM_imperv_near_t0_z
+HUM_roaddens_r5km_z
+HUM_traildens_r10km_z

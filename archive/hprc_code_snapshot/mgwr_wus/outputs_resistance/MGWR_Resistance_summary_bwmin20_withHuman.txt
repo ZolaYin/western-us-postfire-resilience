@@ -1,0 +1,5 @@
+Chosen setting:
+{'kernel': 'bisquare', 'multi_bw_min': 20, 'bandwidths': array([  55., 1257.,  472.,   81.,   21.,  504.,   73.,   21.,  337.,
+         21.,   52.])}
+
+None

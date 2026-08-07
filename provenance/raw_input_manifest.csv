@@ -1,0 +1,14 @@
+data_group,product,version_or_years,local_source_name,authoritative_url,sha256,status,notes
+fire,MTBS,freeze before release,,https://www.mtbs.gov/direct-download,,pending,Record exact fire-history and severity bundles
+vegetation_response,Annual RESI,2000-2023,,,,blocking,Public archive DOI or access instructions required
+forest_type,LANDFIRE EVT,2022,,https://landfire.gov/data,,pending,Record exact product version and archive name
+forest_structure,LANDFIRE CBH,"2008;2010;2012;2014;2016;2022",,https://landfire.gov/data,,pending,Nearest-year matching; earlier year wins ties
+forest_structure,Annual TCC,2000-2023,,,,blocking,Recover exact GEE collection or asset ID
+climate,gridMET,2000-2023,,https://www.climatologylab.org/gridmet.html,,pending,Record NetCDF names and acquisition dates
+topography,USGS 3DEP,freeze before release,,https://www.usgs.gov/the-national-map-data-delivery,,pending,Record DEM product/resolution
+soil,SoilGrids 250 m v2,0-30 cm SOC,,https://docs.isric.org/globaldata/soilgrids/,,pending,Record layer and aggregation statistic
+land_cover,NLCD or Annual NLCD,freeze before release,,https://www.mrlc.gov/viewer/,,pending,Forest mask and imperviousness provenance
+night_lights,VIIRS VNL,freeze before release,,https://eogdata.mines.edu/products/vnl/,,pending,Record version and band
+population,GPWv4,freeze before release,,https://sedac.ciesin.columbia.edu/data/collection/gpw-v4,,pending,Record release and terms
+access,OpenStreetMap/Geofabrik,freeze download dates,,https://download.geofabrik.de/north-america/us.html,,pending,Record regional extracts and ODbL attribution
+ecoregions,EPA Level III,freeze before release,,https://www.epa.gov/eco-research/level-iii-and-iv-ecoregions-continental-united-states,,pending,Record shapefile checksum

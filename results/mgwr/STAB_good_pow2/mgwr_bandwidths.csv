@@ -1,0 +1,13 @@
+term,bandwidth
+Intercept,43.0
+TS_elev_m_z,603.0
+TS_slope_deg_z,1801.0
+TS_SOC_0_30cm_z,470.0
+FS_TCC_t0_z,869.0
+FS_CBH_t0agg_z,118.0
+HUM_roaddens_r5km_z,1389.0
+HUM_traildens_r10km_z,663.0
+HUM_viirs_near_t0_log_z,180.0
+HUM_imperv_near_t0_z,5262.0
+CLIM_pr_sum_pre_z,43.0
+CLIM_tmmn_mean_pre_z,2676.0

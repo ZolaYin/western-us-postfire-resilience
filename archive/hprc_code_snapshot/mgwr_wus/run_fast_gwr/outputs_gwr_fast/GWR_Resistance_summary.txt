@@ -1,0 +1,3 @@
+kernel=gaussian, fixed=False, bw=63.0
+
+None

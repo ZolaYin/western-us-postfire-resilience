@@ -1,0 +1,3 @@
+diagnostic,response,n,k_neighbors,moran_i,p_sim,r2,rmse,bias,max_abs_residual_z_for_plot
+Global OLS residual Moran's I,Resistance,12000,8,0.4285739795350338,0.001,0.06986691306929838,0.18067289368191317,5.0922229396140513e-17,2.3041998475721854
+MGWR stage5b residual Moran's I,Resistance,12000,8,0.019868120860344254,0.001,,,,

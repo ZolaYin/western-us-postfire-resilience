@@ -1,0 +1,26 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+output/
+scratch/
+*.out
+*.err
+*.log
+*.joblib
+*.pkl
+*.tif
+*.tiff
+*.zip
+*.tar
+*.tar.gz
+
+# Raw inputs remain at their authoritative repositories.
+data/raw/
+
+# Keep the intentionally bundled processed table and partitions.
+!data/processed/*.parquet
+!data/splits/*.parquet

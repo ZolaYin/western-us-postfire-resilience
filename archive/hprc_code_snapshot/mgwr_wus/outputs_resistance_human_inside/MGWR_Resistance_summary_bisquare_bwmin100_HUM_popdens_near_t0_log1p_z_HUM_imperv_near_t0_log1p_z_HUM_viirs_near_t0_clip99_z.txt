@@ -1,0 +1,10 @@
+Chosen setting:
+{'kernel': 'bisquare', 'multi_bw_min': 100, 'bandwidths': [101.0, 101.0, 101.0, 11297.0, 211.0, 101.0, 2424.0, 2291.0, 101.0, 1999.0, 101.0], 'human_x': ['HUM_popdens_near_t0_log1p_z', 'HUM_imperv_near_t0_log1p_z', 'HUM_viirs_near_t0_clip99_z']}
+
+Y variable: Resistance
+Predictors: ['CLIM_pr_gs_sum_mm_pre', 'CLIM_vpd_gs_mean_kpa_pre', 'FS_TCC_t0', 'FS_AIproxy_t0', 'TS_elev_m', 'TS_slope_deg', 'TS_SOC_0_30cm', 'HUM_popdens_near_t0_log1p_z', 'HUM_imperv_near_t0_log1p_z', 'HUM_viirs_near_t0_clip99_z']
+
+n = 11298, k = 10
+
+MGWR summary:
+None

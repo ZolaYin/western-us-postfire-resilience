@@ -1,0 +1,11 @@
+# topo+soil+forest+climate, no human variables (10 vars)
+TS_elev_m_z
+TS_slope_deg_z
+TS_twi_z
+TS_SOC_0_30cm_clean_z
+FS_TCC_t0_z
+FS_CBH_t0agg_z
+CLIM_pr_sum_pre_z
+CLIM_tmmn_mean_pre_z
+CLIM_hot_days_35C_pre_z
+CLIM_tmmx_std_pre_z

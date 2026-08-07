@@ -1,0 +1,6 @@
+response,eligible_rows,random_train_rows,random_test_rows,block_train_rows,block_test_rows,block_train_groups,block_test_groups
+Resistance,133372,106697,26675,106387,26985,215,54
+T50,56259,45007,11252,41617,14642,199,50
+T80,56259,45007,11252,41617,14642,199,50
+IRI_good_pow2,56259,45007,11252,41617,14642,199,50
+STAB_good_pow2,56259,45007,11252,41617,14642,199,50

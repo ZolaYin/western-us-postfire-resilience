@@ -1,0 +1,53 @@
+=== Block-split model summary ===
+
+
+Family: gaussian 
+Link function: identity 
+
+Formula:
+Resistance ~ s(x, y, k = 40, bs = "tp") + s(FS_CBH_t0agg_z, k = 5, 
+    bs = "cr") + ti(x, y, by = FS_CBH_t0agg_z, k = c(8, 8), bs = c("tp", 
+    "tp")) + s(TS_elev_m_z, k = 5, bs = "cr") + ti(x, y, by = TS_elev_m_z, 
+    k = c(8, 8), bs = c("tp", "tp")) + s(TS_SOC_0_30cm_clean_z, 
+    k = 5, bs = "cr") + ti(x, y, by = TS_SOC_0_30cm_clean_z, 
+    k = c(8, 8), bs = c("tp", "tp")) + s(HUM_roaddens_r5km_z, 
+    k = 5, bs = "cr") + ti(x, y, by = HUM_roaddens_r5km_z, k = c(8, 
+    8), bs = c("tp", "tp")) + s(CLIM_pr_sum_pre_z, k = 5, bs = "cr") + 
+    ti(x, y, by = CLIM_pr_sum_pre_z, k = c(8, 8), bs = c("tp", 
+        "tp")) + s(FS_TCC_t0_z, k = 5, bs = "cr") + ti(x, y, 
+    by = FS_TCC_t0_z, k = c(8, 8), bs = c("tp", "tp")) + s(TS_slope_deg_z, 
+    k = 5, bs = "cr") + s(HUM_traildens_r10km_z, k = 5, bs = "cr") + 
+    s(CLIM_tmmn_mean_pre_z, k = 5, bs = "cr") + s(HUM_viirs_near_t0_log_z, 
+    k = 5, bs = "cr") + s(HUM_imperv_near_t0_z, k = 5, bs = "cr")
+
+Parametric coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) 0.793556   0.002695   294.4   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Approximate significance of smooth terms:
+                                 edf Ref.df      F p-value    
+s(x,y)                        37.957 38.904  45.90  <2e-16 ***
+s(FS_CBH_t0agg_z)              3.899  3.992  51.32  <2e-16 ***
+ti(x,y):FS_CBH_t0agg_z        45.363 47.238  25.83  <2e-16 ***
+s(TS_elev_m_z)                 3.952  3.998 123.37  <2e-16 ***
+ti(x,y):TS_elev_m_z           47.354 48.510  37.45  <2e-16 ***
+s(TS_SOC_0_30cm_clean_z)       3.747  3.950  86.53  <2e-16 ***
+ti(x,y):TS_SOC_0_30cm_clean_z 45.160 47.131  24.80  <2e-16 ***
+s(HUM_roaddens_r5km_z)         3.831  3.974  47.01  <2e-16 ***
+ti(x,y):HUM_roaddens_r5km_z   44.098 46.434  18.04  <2e-16 ***
+s(CLIM_pr_sum_pre_z)           3.984  4.000 109.44  <2e-16 ***
+ti(x,y):CLIM_pr_sum_pre_z     47.566 48.577  37.76  <2e-16 ***
+s(FS_TCC_t0_z)                 3.953  3.998 203.95  <2e-16 ***
+ti(x,y):FS_TCC_t0_z           41.937 44.913  24.42  <2e-16 ***
+s(TS_slope_deg_z)              3.810  3.971 200.50  <2e-16 ***
+s(HUM_traildens_r10km_z)       3.918  3.994 104.76  <2e-16 ***
+s(CLIM_tmmn_mean_pre_z)        3.956  3.999  98.75  <2e-16 ***
+s(HUM_viirs_near_t0_log_z)     3.869  3.983 359.35  <2e-16 ***
+s(HUM_imperv_near_t0_z)        3.159  3.580  70.22  <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+R-sq.(adj) =  0.264   Deviance explained = 26.6%
+fREML = -36083  Scale est. = 0.02972   n = 109463
