@@ -14,6 +14,7 @@ Validation date: 2026-08-11.
 - The shared MGWR sample and OLS residual diagnostics were rebuilt; published R², Moran's I, and p values matched to at least eight decimal places.
 - The canonical MGWR calibration starts successfully. The full 12,000-point and complete-sample calibrations remain documented HPC jobs rather than laptop validation tasks.
 - The final zoning was rebuilt from the newly published point table, three complete-sample coefficient tables, and exact EPA-derived analysis units. After matching rows by EPA code and feature coordinates, thresholds, sensitivity tables, summaries, numeric zone fields, and final q75 classifications matched the released outputs exactly.
+- The two legacy non-q75 columns retained for provenance are not part of the final zoning definition. For Central Basin and Range, `mechanism_zone` and `management_zone` can switch between `Mixed-control transition zone` and `Structure-dominated resilience zone` because the unit lies at a floating-point decision boundary. This platform-sensitive label does not affect any numeric field or the final `mechanism_zone_q75` and `management_zone_q75` classifications.
 - No personal local path, project email address, common private-key marker, GitHub personal-access-token pattern, or AWS access-key pattern was found in the text release files.
 - No release file exceeds 90 MB.
 
