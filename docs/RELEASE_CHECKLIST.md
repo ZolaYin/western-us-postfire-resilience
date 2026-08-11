@@ -1,17 +1,17 @@
-# Release checklist
+# Maintainer release checklist
 
-- [ ] Confirm repository/project title and GitHub repository name.
-- [ ] Confirm final author list and add `CITATION.cff`.
-- [ ] Choose code license.
-- [ ] Choose derived-data license and verify upstream redistribution terms.
-- [ ] Add annual RESI archive/DOI or controlled-access instructions.
-- [ ] Record exact TCC GEE collection/asset ID.
-- [ ] Recover/document the five-region assignment rule.
-- [ ] Freeze exact raw product versions, acquisition dates, filenames, and checksums.
-- [x] Replace personal local/HPRC paths in the release snapshot with portable placeholders.
-- [x] Scan for secrets, tokens, email addresses, and private filesystem information.
-- [ ] Re-run final RF/OLS/MGWR/zoning workflow from the release directory.
-- [ ] Compare regenerated metrics with `results/`.
-- [ ] Create a tagged release and independent DOI archive.
-- [ ] Verify the independent archive before considering HPRC cleanup.
-- [ ] Obtain explicit approval for the exact HPRC deletion manifest.
+This checklist is for versioned repository releases.
+
+- [x] Include the final analysis table, schema, deterministic splits, model code, zoning code, and retained results.
+- [x] Record authoritative source links and the exact annual RESI and TCC Earth Engine collections.
+- [x] Document and provide code for the five reporting-region labels.
+- [x] Add separate code and derived-data licenses.
+- [x] Add `CITATION.cff` and a repository citation.
+- [x] Publish a read-only Google Drive data-release folder for downloadable and larger artifacts.
+
+- [ ] For each future version, regenerate `provenance/file_manifest.csv` and verify SHA-256 values.
+- [ ] Run the retained workflow and compare regenerated metrics with `results/`.
+- [ ] Replace the repository citation with the final manuscript citation and DOI when they become available.
+- [ ] Create a version tag and DOI-backed archive for the journal submission package.
+
+The last four items are normal maintenance steps for a future tagged journal release; they do not prevent collaborators from using or sharing the current repository.

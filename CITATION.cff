@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use this software or the derived data, please cite it using the metadata below."
+title: "Western U.S. Post-fire Forest Resilience: reproducibility package"
+type: software
+authors:
+  - family-names: Yin
+    given-names: Qingyang
+    alias: ZolaYin
+version: 0.1.0
+date-released: 2026-08-11
+repository-code: "https://github.com/ZolaYin/western-us-postfire-resilience"
+url: "https://github.com/ZolaYin/western-us-postfire-resilience"
+license: MIT
+keywords:
+  - post-fire resilience
+  - forest recovery
+  - spatial transferability
+  - MGWR
+  - western United States
+abstract: >-
+  Reproducibility package for a 1 km analysis of post-fire forest resilience
+  across 11 western U.S. states, including an analysis-ready table,
+  deterministic partitions, preprocessing and modeling code, and management
+  zoning outputs.

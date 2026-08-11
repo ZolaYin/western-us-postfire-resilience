@@ -21,6 +21,7 @@ def sha256(path: Path) -> str:
 def file_rows() -> list[dict[str, str | int]]:
     excluded = {
         Path("provenance/file_manifest.csv"),
+        Path("provenance/drive_release_manifest.csv"),
         Path("provenance/model_code_inventory.csv"),
     }
     rows = []
@@ -56,17 +57,32 @@ def model_rows(rows: list[dict[str, str | int]]) -> list[dict[str, str | int]]:
     return result
 
 
-def write_csv(path: Path, rows: list[dict], fieldnames: list[str]) -> None:
+def write_csv(
+    path: Path,
+    rows: list[dict],
+    fieldnames: list[str],
+    *,
+    lineterminator: str = "\r\n",
+) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=fieldnames)
+        writer = csv.DictWriter(
+            stream,
+            fieldnames=fieldnames,
+            lineterminator=lineterminator,
+        )
         writer.writeheader()
         writer.writerows(rows)
 
 
 def main() -> None:
     rows = file_rows()
-    write_csv(ROOT / "provenance/file_manifest.csv", rows, ["path", "bytes", "sha256"])
+    write_csv(
+        ROOT / "provenance/file_manifest.csv",
+        rows,
+        ["path", "bytes", "sha256"],
+        lineterminator="\n",
+    )
     write_csv(
         ROOT / "provenance/model_code_inventory.csv",
         model_rows(rows),

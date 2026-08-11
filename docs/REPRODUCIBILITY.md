@@ -9,7 +9,16 @@ conda env create -f environment.yml
 conda activate western-us-postfire-resilience
 ```
 
-## 2. Verify the bundled table
+## 2. Rebuild annual remote-sensing inputs when needed
+
+The exact Google Earth Engine exports used for annual RESI and tree canopy cover are recorded in:
+
+- `src/preprocessing/export_annual_resi_gee.js`
+- `src/preprocessing/export_annual_tcc_gee.js`
+
+Paste either script into the Earth Engine Code Editor, adjust only the destination Drive folder if needed, and start the generated export tasks. Official collection links and derivations are documented in `docs/DATA_SOURCES.md`.
+
+## 3. Verify the bundled table and reporting regions
 
 ```bash
 python src/preprocessing/describe_model_table.py \
@@ -19,7 +28,14 @@ python src/preprocessing/describe_model_table.py \
 
 Compare its SHA-256 checksum with `provenance/file_manifest.csv`.
 
-## 3. Rebuild deterministic partitions
+```bash
+python src/preprocessing/assign_reporting_regions.py \
+  data/processed/westernus_model_table.parquet
+```
+
+The released table should report `mismatches=0` for all 133,409 rows.
+
+## 4. Rebuild deterministic partitions
 
 ```bash
 python src/splits/build_split_assignments.py \
@@ -30,7 +46,7 @@ python src/splits/build_split_assignments.py \
 
 The saved table contains a global 100 km block ID and response-specific eligibility, random split, and block split columns. Split labels are joined by `pixel_id`; row order is never used as an external key.
 
-## 4. Run the RF transferability comparison
+## 5. Run the RF transferability comparison
 
 ```bash
 python src/models/rf/run_foresttype_comparison.py \
@@ -41,7 +57,7 @@ python src/models/rf/run_foresttype_comparison.py \
   --trees 300 --random-state 42
 ```
 
-## 5. Prepare the shared MGWR sample
+## 6. Prepare the shared MGWR sample
 
 ```bash
 python src/preprocessing/prepare_mgwr_samples.py \
@@ -50,7 +66,7 @@ python src/preprocessing/prepare_mgwr_samples.py \
   --sample-n 12000 --random-state 42
 ```
 
-## 6. Run OLS residual spatial diagnostics
+## 7. Run OLS residual spatial diagnostics
 
 ```bash
 python src/models/ols/run_pre_mgwr_diagnostics.py \
@@ -60,7 +76,7 @@ python src/models/ols/run_pre_mgwr_diagnostics.py \
   --output-dir output/ols_diagnostics
 ```
 
-## 7. Run MGWR
+## 8. Run MGWR
 
 ```bash
 python src/models/mgwr/run_mgwr.py \
@@ -72,7 +88,7 @@ python src/models/mgwr/run_mgwr.py \
 
 The complete-sample alternative is `src/models/mgwr/run_complete_sample_mgwr.py`; it requires substantially more compute and is intended for Slurm/HPRC.
 
-## 8. Build management zones
+## 9. Build management zones
 
 The final zoning script expects the multiresponse MGWR effect table joined to EPA Level III geometries. The retained local coefficients and zoning summaries are included under `results/`. Run the multiresponse join first, then the constraint framework:
 

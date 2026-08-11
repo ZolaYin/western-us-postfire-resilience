@@ -18,7 +18,7 @@ The machine-readable schema is `data/processed/westernus_model_table_schema.csv`
 - `row`, `col`: reference-grid indices.
 - `x`, `y`: EPSG:5070 pixel-center coordinates in metres.
 - `lon_wgs84`, `lat_wgs84`: WGS84 coordinates for reporting.
-- `region`: five broad reporting regions. The original rule that created this column still needs to be recovered or documented before release.
+- `region`: five deterministic geographic reporting strata. West of 118°W, pixels are `PNW` at or north of 44°N and `CA_med` to the south. At or east of 118°W, pixels are `N_Rockies` at or north of 44°N, `S_Rockies` from 37°N to 44°N, and `SW_dry` south of 37°N. The executable rule is in `src/preprocessing/assign_reporting_regions.py`.
 
 ## Fire and response variables
 

@@ -1,21 +1,48 @@
 # Data sources and provenance
 
-Raw rasters are not committed. The links below are the authoritative access points for the upstream products. Product versions, acquisition dates, local filenames, checksums, and processing scripts must be frozen in `provenance/raw_input_manifest.csv` before public release.
+The released Parquet table contains project-derived 1 km attributes, not copies of the source rasters. Raw inputs can be obtained from the official access points below. The public [Google Drive data release](https://drive.google.com/drive/folders/1C1kPp0hS7RW5zTaVD0c7O88LxmNuJ3wk) mirrors the analysis-ready data and provides larger derived artifacts.
 
-| Data group | Product used in the project | Authoritative access | Project use | Release status |
+## Source inventory
+
+| Data group | Product and identifier | Official access | Project use | Reuse/attribution note |
 |---|---|---|---|---|
-| Fire history and severity | Monitoring Trends in Burn Severity (MTBS) | https://www.mtbs.gov/direct-download | Fire year `t0`, severity at `t0`, burned-pixel mask; aligned to the 1 km reference grid | Link verified; exact source bundle/checksum still needed |
-| Annual vegetation response | Annual RESI, 2000–2023 | **Public archive/DOI still required** | Pre-fire baseline, Resistance, IRI, stability, and recovery-time metrics | Blocking item for public release |
-| Existing vegetation type and canopy base height | LANDFIRE EVT and CBH, including 2008/2010/2012/2014/2016/2022 CBH inputs | https://landfire.gov/data | Forest mask/type, broad EVT groups, near-`t0` CBH | Link verified; freeze exact LANDFIRE versions |
-| Tree canopy cover | Annual 30 m GEE exports, matched to `t0` | **Exact GEE collection/asset ID still required** | `FS_TCC_t0` | Blocking provenance item |
-| Climate and water balance | gridMET | https://www.climatologylab.org/gridmet.html | Pre/post-fire precipitation, temperature, VPD, ETo, aridity, hot days, and variability | Link verified; freeze NetCDF names/checksums |
-| Elevation | USGS 3D Elevation Program / The National Map | https://www.usgs.gov/the-national-map-data-delivery | Elevation; slope and other terrain derivatives | Link verified |
-| Soil | SoilGrids 250 m v2 | https://docs.isric.org/globaldata/soilgrids/ | 0–30 cm soil organic carbon | Link verified; document layer/depth statistic |
-| Imperviousness / forest mask | NLCD / Annual NLCD through MRLC | https://www.mrlc.gov/viewer/ | Near-`t0` impervious surface and legacy NLCD forest mask | Link verified; freeze collection/version |
-| Nighttime lights | VIIRS annual nighttime lights, Earth Observation Group | https://eogdata.mines.edu/products/vnl/ | Near-`t0` nighttime light | Link verified; freeze VNL version and band |
-| Population | GPWv4 population density | https://sedac.ciesin.columbia.edu/data/collection/gpw-v4 | Near-`t0`/windowed population pressure | Confirm exact release and redistribution terms |
-| Roads and trails | OpenStreetMap-derived line data, downloaded through Geofabrik | https://download.geofabrik.de/north-america/us.html | Exact line length followed by 5 km road and 10 km trail moving-window density | Document download dates and ODbL attribution |
-| Management boundaries | EPA Level III ecoregions | https://www.epa.gov/eco-research/level-iii-and-iv-ecoregions-continental-united-states | Aggregation and final management-zone boundaries | Link verified; freeze shapefile checksum |
+| Fire history and severity | Monitoring Trends in Burn Severity (MTBS) | [MTBS Direct Download](https://www.mtbs.gov/direct-download) | Fire year `t0`, severity at `t0`, and burned-pixel mask aligned to the 1 km grid | U.S. federal data; credit MTBS/USGS/USFS and cite the downloaded product |
+| Annual vegetation response | Project-derived annual RESI, 2000–2023 | Landsat [LT05](https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LT05_C02_T1_L2), [LE07](https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LE07_C02_T1_L2), [LC08](https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC08_C02_T1_L2), and [LC09](https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC09_C02_T1_L2) Collection 2 Tier 1 Level-2 | Pre-fire baseline, Resistance, integrated recovery, stability, and recovery-time metrics | Landsat data are U.S. public-domain data; cite USGS. The project-derived annual layer is reproducible from the released GEE code |
+| Export boundary | TIGER/2018/States | [Earth Engine catalog](https://developers.google.com/earth-engine/datasets/catalog/TIGER_2018_States) | Dissolved boundary of the 11 western states | U.S. Census Bureau data |
+| Existing vegetation type | LANDFIRE EVT 2022 | [LANDFIRE Data Distribution](https://landfire.gov/data) | Forest mask/type and broad EVT groups | U.S. federal product; cite the LANDFIRE version |
+| Canopy base height | LANDFIRE CBH for 2008, 2010, 2012, 2014, 2016, and 2022 | [LANDFIRE Data Distribution](https://landfire.gov/data) | Nearest-year canopy structure, with the earlier year winning ties | U.S. federal product; cite the LANDFIRE versions |
+| Tree canopy cover | USFS Tree Canopy Cover v2023-5; GEE collection `USGS/NLCD_RELEASES/2023_REL/TCC/v2023-5`; band `NLCD_Percent_Tree_Canopy_Cover` | [Earth Engine catalog](https://developers.google.com/earth-engine/datasets/catalog/USGS_NLCD_RELEASES_2023_REL_TCC_v2023-5) and [MRLC TCC page](https://www.mrlc.gov/data/type/nlcd-tree-canopy-cover) | Annual 30 m TCC matched to fire year and aggregated to the 1 km grid | Collected with U.S. Government funding; use is allowed without additional permission or fees; cite USDA Forest Service v2023.5 |
+| Climate and water balance | gridMET, 2000–2023 | [Climatology Lab gridMET](https://www.climatologylab.org/gridmet.html) | Pre/post-fire precipitation, temperature, VPD, ETo, aridity, hot days, and variability | Cite gridMET and the variables/years used; raw NetCDF files are not redistributed here |
+| Elevation | USGS 3D Elevation Program | [The National Map data delivery](https://www.usgs.gov/the-national-map-data-delivery) | Elevation, slope, northness/eastness, TWI, and roughness | U.S. federal data; cite USGS 3DEP |
+| Soil | SoilGrids 250 m v2, 0–30 cm soil organic carbon | [ISRIC SoilGrids documentation](https://docs.isric.org/globaldata/soilgrids/) | 0–30 cm soil organic carbon aggregated to the 1 km grid | [CC BY 4.0](https://docs.isric.org/globaldata/soilgrids/SoilGrids_faqs_04.html); cite SoilGrids 2.0 |
+| Land cover and imperviousness | NLCD / Annual NLCD | [MRLC data access](https://www.mrlc.gov/data) | Near-`t0` impervious surface and legacy NLCD forest mask | U.S. federal products; cite the applicable NLCD release |
+| Nighttime lights | VIIRS annual nighttime lights, Earth Observation Group | [EOG VIIRS Nighttime Lights](https://eogdata.mines.edu/products/vnl/) | Near-`t0` nighttime-light intensity | EOG lists VNL among products available under CC BY 4.0; credit EOG and cite the relevant VNL paper/version |
+| Population | Gridded Population of the World v4 | [NASA SEDAC GPWv4](https://sedac.ciesin.columbia.edu/data/collection/gpw-v4) | Near-`t0` or windowed population-pressure predictor | Cite GPWv4 and follow the SEDAC data-use conditions; raw GPW grids are not redistributed here |
+| Roads and trails | OpenStreetMap line data from Geofabrik regional extracts | [Geofabrik U.S. downloads](https://download.geofabrik.de/north-america/us.html) | Exact line length followed by 5 km road and 10 km trail moving-window density | © OpenStreetMap contributors; source database is licensed under [ODbL 1.0](https://www.openstreetmap.org/copyright) |
+| Management boundaries | EPA Level III ecoregions | [EPA Level III/IV ecoregions](https://www.epa.gov/eco-research/level-iii-and-iv-ecoregions-continental-united-states) | Aggregation and final management-zone boundaries | U.S. federal data; cite EPA and the downloaded boundary release |
+
+## Annual RESI derivation
+
+Annual RESI is generated by [`../src/preprocessing/export_annual_resi_gee.js`](../src/preprocessing/export_annual_resi_gee.js), rather than downloaded as an independent product:
+
+1. merge Landsat 5/7/8/9 Collection 2 Tier 1 Level-2 scenes;
+2. mask cloud shadow, snow, cloud, and cirrus with `QA_PIXEL`;
+3. apply the Collection 2 surface-reflectance scale and offset;
+4. form a May–September median composite for each year from 2000 through 2023;
+5. compute `NDVI` and `NDMI`, followed by `RESI = 0.5 × (NDVI + NDMI)`;
+6. scale `[-0.2, 0.8]` to `[0, 1]`, clamp, multiply by 10,000, round, and export as UInt16;
+7. export in EPSG:5070 at 1,000 m over the 11-state boundary.
+
+## Tree canopy cover derivation
+
+[`../src/preprocessing/export_annual_tcc_gee.js`](../src/preprocessing/export_annual_tcc_gee.js) records the exact source collection and band used for the annual exports:
+
+- collection: `USGS/NLCD_RELEASES/2023_REL/TCC/v2023-5`;
+- band: `NLCD_Percent_Tree_Canopy_Cover`;
+- available source years: 1985–2023;
+- project export years: 2000–2023;
+- native resolution: 30 m;
+- project analysis value: exact fire year `t0`, aggregated to the 1 km grid.
 
 ## Harmonization rules
 
@@ -23,11 +50,11 @@ Raw rasters are not committed. The links below are the authoritative access poin
 - Target resolution: 1,000 m.
 - Dynamic inputs are anchored to fire year `t0`.
 - Continuous rasters use mean aggregation or bilinear resampling as appropriate.
-- Categorical rasters use nearest-neighbor/mode logic.
-- CBH uses nearest available year, with earlier year winning ties.
+- Categorical rasters use nearest-neighbor or modal aggregation.
+- CBH uses the nearest available year, with the earlier year winning ties.
 - TCC uses the exact fire year for the retained 2005–2022 pixels.
 - Road/trail density units are km of line per km² within circular neighborhoods.
 
-## Redistribution review required
+## Distribution boundary
 
-The presence of a public download link does not automatically authorize repackaging the raw raster. Before release, record the license/terms for each product and decide whether the repository should contain (a) only links and scripts, (b) derived variables, or (c) selected source rasters. The current draft contains only the derived model table.
+GitHub and Google Drive distribute the project-created model table, split assignments, code, and derived results. Source rasters remain with their official providers, which keeps downloads current and preserves source-specific attribution. The project-created compilation is licensed under [`../LICENSE-DATA.md`](../LICENSE-DATA.md); upstream terms remain applicable to source-derived fields, especially the OpenStreetMap-derived road and trail densities.

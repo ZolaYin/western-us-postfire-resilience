@@ -1,14 +1,15 @@
-data_group,product,version_or_years,local_source_name,authoritative_url,sha256,status,notes
-fire,MTBS,freeze before release,,https://www.mtbs.gov/direct-download,,pending,Record exact fire-history and severity bundles
-vegetation_response,Annual RESI,2000-2023,,,,blocking,Public archive DOI or access instructions required
-forest_type,LANDFIRE EVT,2022,,https://landfire.gov/data,,pending,Record exact product version and archive name
-forest_structure,LANDFIRE CBH,"2008;2010;2012;2014;2016;2022",,https://landfire.gov/data,,pending,Nearest-year matching; earlier year wins ties
-forest_structure,Annual TCC,2000-2023,,,,blocking,Recover exact GEE collection or asset ID
-climate,gridMET,2000-2023,,https://www.climatologylab.org/gridmet.html,,pending,Record NetCDF names and acquisition dates
-topography,USGS 3DEP,freeze before release,,https://www.usgs.gov/the-national-map-data-delivery,,pending,Record DEM product/resolution
-soil,SoilGrids 250 m v2,0-30 cm SOC,,https://docs.isric.org/globaldata/soilgrids/,,pending,Record layer and aggregation statistic
-land_cover,NLCD or Annual NLCD,freeze before release,,https://www.mrlc.gov/viewer/,,pending,Forest mask and imperviousness provenance
-night_lights,VIIRS VNL,freeze before release,,https://eogdata.mines.edu/products/vnl/,,pending,Record version and band
-population,GPWv4,freeze before release,,https://sedac.ciesin.columbia.edu/data/collection/gpw-v4,,pending,Record release and terms
-access,OpenStreetMap/Geofabrik,freeze download dates,,https://download.geofabrik.de/north-america/us.html,,pending,Record regional extracts and ODbL attribution
-ecoregions,EPA Level III,freeze before release,,https://www.epa.gov/eco-research/level-iii-and-iv-ecoregions-continental-united-states,,pending,Record shapefile checksum
+data_group,product,version_or_years,local_or_collection_identifier,authoritative_url,distribution_in_release,status,notes
+fire,MTBS,fire years 2005-2022,official MTBS burn/severity bundles,https://www.mtbs.gov/direct-download,derived fields only,documented,Fire year severity and burned-pixel mask
+vegetation_response,Project-derived annual RESI,2000-2023,LANDSAT/LT05/C02/T1_L2; LANDSAT/LE07/C02/T1_L2; LANDSAT/LC08/C02/T1_L2; LANDSAT/LC09/C02/T1_L2,https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LT05_C02_T1_L2,derived fields and export code,documented,May-September median; RESI=0.5*(NDVI+NDMI); scaled to UInt16
+boundary,TIGER States,2018,TIGER/2018/States,https://developers.google.com/earth-engine/datasets/catalog/TIGER_2018_States,code reference only,documented,Dissolved western 11-state export boundary
+forest_type,LANDFIRE EVT,2022,EVT 2022,https://landfire.gov/data,derived fields only,documented,Forest mask and broad EVT group
+forest_structure,LANDFIRE CBH,2008;2010;2012;2014;2016;2022,LANDFIRE CBH,https://landfire.gov/data,derived fields only,documented,Nearest-year matching; earlier year wins ties
+forest_structure,USFS Tree Canopy Cover v2023-5,2000-2023,USGS/NLCD_RELEASES/2023_REL/TCC/v2023-5 :: NLCD_Percent_Tree_Canopy_Cover,https://developers.google.com/earth-engine/datasets/catalog/USGS_NLCD_RELEASES_2023_REL_TCC_v2023-5,derived field and export code,documented,Exact fire-year sampling and 1 km aggregation
+climate,gridMET,2000-2023,gridMET daily variables,https://www.climatologylab.org/gridmet.html,derived fields only,documented,Pre/post-fire climate and water-balance windows
+topography,USGS 3DEP,project DEM snapshot,USGS 3DEP / The National Map,https://www.usgs.gov/the-national-map-data-delivery,derived fields only,documented,Elevation and terrain derivatives
+soil,SoilGrids 250 m v2,0-30 cm SOC,SoilGrids v2 SOC,https://docs.isric.org/globaldata/soilgrids/,derived field only,documented,CC BY 4.0; aggregated to 1 km
+land_cover,NLCD / Annual NLCD,near-t0 epochs,MRLC NLCD products,https://www.mrlc.gov/data,derived fields only,documented,Forest mask and imperviousness
+night_lights,VIIRS annual VNL,near-t0 years,EOG annual VIIRS VNL,https://eogdata.mines.edu/products/vnl/,derived field only,documented,Credit Earth Observation Group and cite product version
+population,GPWv4,near-t0/windowed,GPWv4 population density,https://sedac.ciesin.columbia.edu/data/collection/gpw-v4,derived field only,documented,Follow NASA SEDAC/CIESIN data-use conditions
+access,OpenStreetMap via Geofabrik,project download snapshot,U.S. regional OSM extracts,https://download.geofabrik.de/north-america/us.html,derived density fields only,documented,© OpenStreetMap contributors; ODbL 1.0
+ecoregions,EPA Level III,project boundary snapshot,EPA Level III ecoregions,https://www.epa.gov/eco-research/level-iii-and-iv-ecoregions-continental-united-states,derived zoning layer,documented,Management-zone aggregation and boundaries
