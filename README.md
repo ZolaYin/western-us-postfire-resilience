@@ -11,6 +11,22 @@ Reproducibility package for a 1 km analysis of post-fire forest resilience acros
 
 The raw third-party rasters are not repackaged. They remain available from the official providers linked below; project-created tables and results are distributed directly through GitHub and Google Drive.
 
+### Direct release downloads
+
+| Artifact | Location |
+|---|---|
+| Final 83-column model table | [GitHub](data/processed/westernus_model_table.parquet) · [Google Drive](https://drive.google.com/file/d/1emn1SUqd8l2XTYcdi9GQ-kmzBbtFWZCM/view) |
+| Deterministic split assignments | [GitHub](data/splits/westernus_split_assignments.parquet) · [Google Drive](https://drive.google.com/file/d/1jscuHDtkVUsTi16V19qpuZbf4hnuaQIL/view) |
+| Portable data release bundle | [Google Drive](https://drive.google.com/file/d/1vpeKEfcI9-MhIm31KPqxvDMnTpmN_QR1/view) |
+| Final zoning GeoPackage | [GitHub](results/zoning/mgwr_constraint_management_zones_q75.gpkg) · [Google Drive](https://drive.google.com/file/d/11xBctNSEZ7zAkwEuc5tVL6R9F4VODPtr/view) |
+| Zoning point input | [Google Drive](https://drive.google.com/file/d/1Drj3YzEIK_0CY-4EyGaashdeosp2rt99/view) |
+| Complete-sample MGWR coefficients: Resistance | [Google Drive](https://drive.google.com/file/d/1r87WJvx7ufoo5aIbmpB7AzfTUmA6CH9w/view) |
+| Complete-sample MGWR coefficients: integrated recovery | [Google Drive](https://drive.google.com/file/d/1QJXVhXZRu99sYZtijmjyF5NvIBmTU616/view) |
+| Complete-sample MGWR coefficients: stability | [Google Drive](https://drive.google.com/file/d/14iQ5FASFuP7lwhUFi1expS9ZgAGIgkUo/view) |
+| Exact EPA-derived zoning analysis units | [Google Drive](https://drive.google.com/file/d/1vze_NF-Oa8IaKI26510Zp0nSGs4FqA17/view) |
+
+The complete machine-readable Drive index, including byte sizes and SHA-256 values, is [`provenance/drive_release_manifest.csv`](provenance/drive_release_manifest.csv).
+
 ## Repository contents
 
 ```text
@@ -38,7 +54,7 @@ provenance/             File manifests and checksums
 - Arizona, California, Colorado, Idaho, Montana, Nevada, New Mexico, Oregon, Utah, Washington, and Wyoming;
 - SHA-256: `2675c4b1b24846bdc52f72b2f15f89cd086626cdfca6a654bf28bf6d9897ec7a`.
 
-The table contains identifiers, fire timing and severity, resilience responses, raw predictors, selected standardized predictors, WGS84 coordinates, and five broad reporting regions. Field definitions are in [`docs/DATA_DICTIONARY.md`](docs/DATA_DICTIONARY.md) and [`data/processed/westernus_model_table_schema.csv`](data/processed/westernus_model_table_schema.csv).
+The table contains identifiers, fire timing and severity, resilience responses, raw predictors, selected standardized predictors, WGS84 coordinates, and five broad reporting regions. Field definitions are in [`docs/DATA_DICTIONARY.md`](docs/DATA_DICTIONARY.md). The machine-readable [`westernus_model_table_dictionary.csv`](data/processed/westernus_model_table_dictionary.csv) provides units, temporal windows, derivations, and sources for all 83 columns; [`westernus_model_table_schema.csv`](data/processed/westernus_model_table_schema.csv) records physical types and missingness.
 
 ## Complete upstream data sources
 

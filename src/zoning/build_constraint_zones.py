@@ -14,11 +14,15 @@ the constraint-focused paper framework:
 """
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
 import json
 import os
+import tempfile
 
-os.environ.setdefault("MPLCONFIGDIR", "/private/tmp/westernus_postfire_mplconfig")
+os.environ.setdefault(
+    "MPLCONFIGDIR", str(Path(tempfile.gettempdir()) / "westernus_postfire_mplconfig")
+)
 
 import geopandas as gpd
 import matplotlib
@@ -32,11 +36,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
-
-BASE = Path(__file__).resolve().parent
-INPUT_DIR = BASE / "resilience_management_zoning_epa_l3_complete_mgwr_2026-06-30"
-INPUT_GPKG = INPUT_DIR / "epa_l3_multiresponse_management_zones.gpkg"
-OUT_DIR = BASE / "resilience_management_zoning_epa_l3_constraint_only_v3_2026-07-06"
 
 MAIN_Q = 0.75
 SENSITIVITY_QS = [0.70, 0.75, 0.80]
@@ -71,8 +70,26 @@ CLUSTER_COLORS = {
 }
 
 
-def read_input() -> gpd.GeoDataFrame:
-    gdf = gpd.read_file(INPUT_GPKG)
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--input-gpkg",
+        required=True,
+        help="EPA Level III multiresponse zoning GeoPackage from compute_multiresponse_zoning.py.",
+    )
+    parser.add_argument("--output-dir", required=True)
+    return parser.parse_args()
+
+
+def checked_file(value: str | Path, label: str) -> Path:
+    path = Path(value).expanduser().resolve()
+    if not path.is_file():
+        raise FileNotFoundError(f"{label} not found: {path}")
+    return path
+
+
+def read_input(input_gpkg: Path) -> gpd.GeoDataFrame:
+    gdf = gpd.read_file(input_gpkg)
     required = [
         "US_L3NAME",
         "n_pixels",
@@ -533,6 +550,7 @@ def write_notes(
     sens: pd.DataFrame,
     pca_summary: pd.DataFrame,
     cluster_summary: pd.DataFrame,
+    output_dir: Path,
 ) -> None:
     main_mixed_mech = float(
         sens.loc[sens["dominance_quantile"].eq(MAIN_Q), "mixed_pct_pixels_mechanism"].iloc[0]
@@ -570,12 +588,18 @@ def write_notes(
         "- If q75 leaves too much area in the mixed zone, use the sensitivity table to justify q70 or use the K-means cluster map as a data-driven constraint-space diagnostic.",
         "- The equal-weight resilience composite is transparent and interpretable; the PCA check is a sensitivity diagnostic rather than the main map.",
     ]
-    (OUT_DIR / "zoning_framework_v3_notes.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    (output_dir / "zoning_framework_v3_notes.md").write_text(
+        "\n".join(lines) + "\n", encoding="utf-8"
+    )
 
 
 def main() -> None:
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    base = prepare_scores(read_input())
+    args = parse_args()
+    input_gpkg = checked_file(args.input_gpkg, "Multiresponse zoning GeoPackage")
+    output_dir = Path(args.output_dir).expanduser().resolve()
+    output_dir.mkdir(parents=True, exist_ok=True)
+    print(f"[constraint zoning 1/4] Loading: {input_gpkg}", flush=True)
+    base = prepare_scores(read_input(input_gpkg))
 
     assigned = {}
     thresholds = {}
@@ -587,8 +611,8 @@ def main() -> None:
         r_thresholds[q] = {"r_low": r_low, "r_high": r_high}
 
         qtag = f"q{int(q * 100)}"
-        csv_out = OUT_DIR / f"mgwr_constraint_management_zones_{qtag}.csv"
-        gpkg_out = OUT_DIR / f"mgwr_constraint_management_zones_{qtag}.gpkg"
+        csv_out = output_dir / f"mgwr_constraint_management_zones_{qtag}.csv"
+        gpkg_out = output_dir / f"mgwr_constraint_management_zones_{qtag}.gpkg"
         gdf_save = gdf_q.copy()
         for col in gdf_save.select_dtypes(include=["category"]).columns:
             gdf_save[col] = gdf_save[col].astype(str)
@@ -598,13 +622,14 @@ def main() -> None:
         mech_col = f"mechanism_zone_q{int(q * 100)}"
         mgmt_col = f"management_zone_q{int(q * 100)}"
         summarize_zones(gdf_q, mech_col).to_csv(
-            OUT_DIR / f"constraint_zone_summary_{qtag}.csv", index=False
+            output_dir / f"constraint_zone_summary_{qtag}.csv", index=False
         )
         summarize_zones(gdf_q, mgmt_col).to_csv(
-            OUT_DIR / f"management_zone_summary_{qtag}.csv", index=False
+            output_dir / f"management_zone_summary_{qtag}.csv", index=False
         )
-        save_crosstab(gdf_q, q, OUT_DIR / f"constraint_by_priority_crosstab_{qtag}.csv")
+        save_crosstab(gdf_q, q, output_dir / f"constraint_by_priority_crosstab_{qtag}.csv")
 
+    print("[constraint zoning 2/4] Built threshold sensitivity outputs", flush=True)
     main_gdf = assigned[MAIN_Q]
     main_mech_col = f"mechanism_zone_q{int(MAIN_Q * 100)}"
     main_mgmt_col = f"management_zone_q{int(MAIN_Q * 100)}"
@@ -613,24 +638,25 @@ def main() -> None:
         main_mech_col,
         MECHANISM_COLORS,
         "MGWR constraint zones (q75 dominance threshold)",
-        OUT_DIR / "fig_mgwr_constraint_zones_q75",
+        output_dir / "fig_mgwr_constraint_zones_q75",
     )
     save_map(
         main_gdf,
         main_mgmt_col,
         MANAGEMENT_COLORS,
         "MGWR constraint-based management zones with resilience priority",
-        OUT_DIR / "fig_mgwr_constraint_management_zones_q75",
+        output_dir / "fig_mgwr_constraint_management_zones_q75",
     )
     save_diagnostic_panel(
         base,
         assigned,
         thresholds,
-        OUT_DIR / "fig_mgwr_constraint_zoning_framework_v3_diagnostics",
+        output_dir / "fig_mgwr_constraint_zoning_framework_v3_diagnostics",
     )
+    print("[constraint zoning 3/4] Built q75 maps and diagnostics", flush=True)
 
     sens = make_sensitivity_summary(base, assigned, thresholds)
-    sens.to_csv(OUT_DIR / "dominance_threshold_sensitivity.csv", index=False)
+    sens.to_csv(output_dir / "dominance_threshold_sensitivity.csv", index=False)
     pd.DataFrame(
         [
             {
@@ -640,32 +666,32 @@ def main() -> None:
             }
             for q in SENSITIVITY_QS
         ]
-    ).to_csv(OUT_DIR / "threshold_values.csv", index=False)
+    ).to_csv(output_dir / "threshold_values.csv", index=False)
 
     pca_summary, pca_detail = make_pca_check(base)
-    pca_summary.to_csv(OUT_DIR / "rcomp_equal_vs_pca_summary.csv", index=False)
-    pca_detail.to_csv(OUT_DIR / "rcomp_equal_vs_pca_by_ecoregion.csv", index=False)
+    pca_summary.to_csv(output_dir / "rcomp_equal_vs_pca_summary.csv", index=False)
+    pca_detail.to_csv(output_dir / "rcomp_equal_vs_pca_by_ecoregion.csv", index=False)
 
     clustered, cluster_summary = assign_kmeans_clusters(base, k=4)
     clustered_save = clustered.copy()
     for col in clustered_save.select_dtypes(include=["category"]).columns:
         clustered_save[col] = clustered_save[col].astype(str)
     clustered_save.drop(columns="geometry").to_csv(
-        OUT_DIR / "kmeans4_constraint_clusters.csv", index=False
+        output_dir / "kmeans4_constraint_clusters.csv", index=False
     )
-    clustered_save.to_file(OUT_DIR / "kmeans4_constraint_clusters.gpkg", driver="GPKG")
-    cluster_summary.to_csv(OUT_DIR / "kmeans4_constraint_cluster_summary.csv", index=False)
+    clustered_save.to_file(output_dir / "kmeans4_constraint_clusters.gpkg", driver="GPKG")
+    cluster_summary.to_csv(output_dir / "kmeans4_constraint_cluster_summary.csv", index=False)
     save_map(
         clustered,
         "kmeans4_mechanism_cluster",
         CLUSTER_COLORS,
         "Data-driven constraint clusters (K-means, k=4)",
-        OUT_DIR / "fig_kmeans4_constraint_clusters",
+        output_dir / "fig_kmeans4_constraint_clusters",
     )
 
     metadata = {
-        "input_gpkg": str(INPUT_GPKG),
-        "output_dir": str(OUT_DIR),
+        "input_gpkg": str(input_gpkg),
+        "output_dir": str(output_dir),
         "effect_definition": "realized local effect: beta * standardized predictor / response standard deviation",
         "dominance_score": "max(forest_structure_constraint, climate_constraint_score, human_pressure_score)",
         "forest_dominance_score": "forest_structure_constraint",
@@ -678,13 +704,13 @@ def main() -> None:
         "n_l3_ecoregions": int(len(base)),
         "n_candidate_pixels": int(base["n_pixels"].sum()),
     }
-    (OUT_DIR / "run_metadata.json").write_text(
+    (output_dir / "run_metadata.json").write_text(
         json.dumps(metadata, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
-    write_notes(base, thresholds, sens, pca_summary, cluster_summary)
+    write_notes(base, thresholds, sens, pca_summary, cluster_summary, output_dir)
 
-    print(f"Wrote constraint-focused framework v3 zoning outputs to: {OUT_DIR}")
+    print(f"[constraint zoning 4/4] Wrote outputs to: {output_dir}")
     print(sens.to_string(index=False))
     print(pca_summary.to_string(index=False))
     print(cluster_summary.to_string(index=False))

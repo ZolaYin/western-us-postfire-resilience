@@ -1,5 +1,7 @@
 # Legacy preprocessing snapshot
 
+> **Archive status:** these scripts are provenance-only snapshots. They are not invoked by the numbered workflow in `docs/REPRODUCIBILITY.md`, are not required to reproduce the released table or results, and intentionally retain `/path/to/google-drive/...` placeholders in place of former machine-specific paths.
+
 These files are the exact project preprocessing scripts, with personal absolute paths replaced by placeholders. They document the established processing logic for:
 
 - annual RESI/MTBS response reconstruction;

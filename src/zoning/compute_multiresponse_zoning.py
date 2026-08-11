@@ -10,11 +10,15 @@ before averaging across responses.
 """
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
 import json
 import os
+import tempfile
 
-os.environ.setdefault("MPLCONFIGDIR", "/private/tmp/westernus_postfire_mplconfig")
+os.environ.setdefault(
+    "MPLCONFIGDIR", str(Path(tempfile.gettempdir()) / "westernus_postfire_mplconfig")
+)
 
 import geopandas as gpd
 import matplotlib
@@ -27,19 +31,22 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
 
-BASE = Path(
-    "/path/to/google-drive"
-    "/我的云端硬盘/US_Fire_and_Ecology_Data/WUS_1km"
-)
-POINTS = BASE / "resilience_management_zoning_mgwr_spatialized_2026-05-28/spatialized_point_zones_full_candidate.parquet"
-ECO_L3 = BASE.parent / "EPA_Ecoregions/us_eco_l3/us_eco_l3.shp"
-COEF_DIR = BASE / "mgwr_retained_response_coefficients_2026-05-29"
-OUT_DIR = BASE / "resilience_management_zoning_epa_l3_multiresponse_2026-06-03"
-
-RESPONSES = {
-    "Resistance": COEF_DIR / "Resistance_mgwr_coefficients.parquet",
-    "IRI_good_pow2": COEF_DIR / "IRI_good_pow2/mgwr_coefficients.parquet",
-    "STAB_good_pow2": COEF_DIR / "STAB_good_pow2/mgwr_coefficients.parquet",
+RESPONSE_PATH_CANDIDATES = {
+    "Resistance": [
+        Path("Resistance_mgwr_complete_coefficients.parquet"),
+        Path("Resistance/mgwr_complete_coefficients.parquet"),
+        Path("Resistance_mgwr_coefficients.parquet"),
+    ],
+    "IRI_good_pow2": [
+        Path("IRI_good_pow2_mgwr_complete_coefficients.parquet"),
+        Path("IRI_good_pow2/mgwr_complete_coefficients.parquet"),
+        Path("IRI_good_pow2/mgwr_coefficients.parquet"),
+    ],
+    "STAB_good_pow2": [
+        Path("STAB_good_pow2_mgwr_complete_coefficients.parquet"),
+        Path("STAB_good_pow2/mgwr_complete_coefficients.parquet"),
+        Path("STAB_good_pow2/mgwr_coefficients.parquet"),
+    ],
 }
 
 DIMENSIONS = {
@@ -81,6 +88,80 @@ SCORE_COLUMNS = [
 ]
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--points",
+        required=True,
+        help="Input spatialized_point_zones_full_candidate.parquet.",
+    )
+    parser.add_argument(
+        "--eco-l3",
+        required=True,
+        help="EPA Level III ecoregion vector file (for example us_eco_l3.shp).",
+    )
+    parser.add_argument(
+        "--coef-dir",
+        required=True,
+        help="Directory containing the three retained MGWR coefficient tables.",
+    )
+    parser.add_argument("--output-dir", required=True)
+    parser.add_argument(
+        "--resistance-only-reference",
+        default=None,
+        help=(
+            "Optional earlier resistance-only zoning CSV. When omitted, the core "
+            "multiresponse zoning is built and comparison-only outputs are skipped."
+        ),
+    )
+    parser.add_argument(
+        "--ecoregion-unit",
+        choices=["source-feature", "dissolved-code"],
+        default="source-feature",
+        help=(
+            "Aggregation unit. 'source-feature' reproduces the published zoning "
+            "layer; 'dissolved-code' merges disjoint polygons sharing an EPA L3 code."
+        ),
+    )
+    parser.add_argument(
+        "--unmatched-policy",
+        choices=["drop", "nearest"],
+        default="drop",
+        help=(
+            "How to handle points outside the supplied ecoregion features. "
+            "'drop' reproduces the published retained-unit layer; 'nearest' "
+            "assigns exterior points to the nearest feature."
+        ),
+    )
+    return parser.parse_args()
+
+
+def checked_file(value: str | Path, label: str) -> Path:
+    path = Path(value).expanduser().resolve()
+    if not path.is_file():
+        raise FileNotFoundError(f"{label} not found: {path}")
+    return path
+
+
+def response_paths(coef_dir: Path) -> dict[str, Path]:
+    paths = {}
+    missing = []
+    for response, candidates in RESPONSE_PATH_CANDIDATES.items():
+        match = next((coef_dir / candidate for candidate in candidates if (coef_dir / candidate).is_file()), None)
+        if match is None:
+            missing.append(
+                f"{response}: expected one of "
+                + ", ".join(str(coef_dir / candidate) for candidate in candidates)
+            )
+        else:
+            paths[response] = match
+    if missing:
+        raise FileNotFoundError(
+            "Missing MGWR coefficient table(s):\n- " + "\n- ".join(missing)
+        )
+    return paths
+
+
 def rank01(values: pd.Series) -> pd.Series:
     return pd.to_numeric(values, errors="coerce").rank(method="average", pct=True).clip(0, 1)
 
@@ -117,11 +198,11 @@ def score_class(value: float, low: float, high: float) -> str:
     return "medium"
 
 
-def load_points() -> pd.DataFrame:
-    df = pd.read_parquet(POINTS).copy()
-    required = ["x", "y", *RESPONSES.keys(), *ALL_DRIVERS]
+def load_points(points_path: Path, responses: list[str]) -> pd.DataFrame:
+    df = pd.read_parquet(points_path).copy()
+    required = ["x", "y", *responses, *ALL_DRIVERS]
     df = df.replace([np.inf, -np.inf], np.nan).dropna(subset=required).reset_index(drop=True)
-    df["R_comp_no_t80"] = df[list(RESPONSES.keys())].apply(rank01).mean(axis=1)
+    df["R_comp_no_t80"] = df[responses].apply(rank01).mean(axis=1)
     return df
 
 
@@ -135,40 +216,62 @@ def interpolate_response_coefficients(
     if missing:
         raise ValueError(f"{response} coefficient table is missing drivers: {missing}")
 
-    sample_coords = coef[["x", "y"]].to_numpy(dtype=float)
-    target_coords = points[["x", "y"]].to_numpy(dtype=float)
-    nn = NearestNeighbors(n_neighbors=IDW_K, algorithm="ball_tree")
-    nn.fit(sample_coords)
-    dists, inds = nn.kneighbors(target_coords, return_distance=True)
-
-    safe_dists = np.maximum(dists, 1.0)
-    weights = 1.0 / np.power(safe_dists, IDW_POWER)
-    weights = weights / weights.sum(axis=1, keepdims=True)
-
+    keep = ["x", "y", *ALL_DRIVERS]
+    merged = points[["x", "y"]].merge(coef[keep], on=["x", "y"], how="left", sort=False)
     beta_out = pd.DataFrame(index=points.index)
-    for driver in ALL_DRIVERS:
-        beta = coef[driver].to_numpy(dtype=float)
-        beta_out[f"beta_{response}_{driver}"] = np.sum(beta[inds] * weights, axis=1)
+    missing_mask = merged[ALL_DRIVERS].isna().any(axis=1)
+
+    if missing_mask.any():
+        sample_coords = coef[["x", "y"]].to_numpy(dtype=float)
+        target_coords = points.loc[missing_mask, ["x", "y"]].to_numpy(dtype=float)
+        n_neighbors = min(IDW_K, len(coef))
+        nn = NearestNeighbors(n_neighbors=n_neighbors, algorithm="ball_tree")
+        nn.fit(sample_coords)
+        dists, inds = nn.kneighbors(target_coords, return_distance=True)
+        safe_dists = np.maximum(dists, 1.0)
+        weights = 1.0 / np.power(safe_dists, IDW_POWER)
+        weights = weights / weights.sum(axis=1, keepdims=True)
+        for driver in ALL_DRIVERS:
+            values = merged[driver].to_numpy(dtype=float)
+            beta = coef[driver].to_numpy(dtype=float)
+            values[missing_mask.to_numpy()] = np.sum(beta[inds] * weights, axis=1)
+            beta_out[f"beta_{response}_{driver}"] = values
+        nearest_stats = {
+            "nearest_distance_median_m": float(np.median(dists[:, 0])),
+            "nearest_distance_p90_m": float(np.percentile(dists[:, 0], 90)),
+            "nearest_distance_p95_m": float(np.percentile(dists[:, 0], 95)),
+            "nearest_distance_max_m": float(np.max(dists[:, 0])),
+        }
+    else:
+        for driver in ALL_DRIVERS:
+            beta_out[f"beta_{response}_{driver}"] = merged[driver].to_numpy(dtype=float)
+        nearest_stats = {
+            "nearest_distance_median_m": 0.0,
+            "nearest_distance_p90_m": 0.0,
+            "nearest_distance_p95_m": 0.0,
+            "nearest_distance_max_m": 0.0,
+        }
 
     meta = {
         "coef_path": str(coef_path),
         "n_coef_points": int(len(coef)),
+        "n_target_points": int(len(points)),
+        "n_exact_coordinate_matches": int((~missing_mask).sum()),
         "idw_k": IDW_K,
         "idw_power": IDW_POWER,
-        "nearest_distance_median_m": float(np.median(dists[:, 0])),
-        "nearest_distance_p90_m": float(np.percentile(dists[:, 0], 90)),
-        "nearest_distance_p95_m": float(np.percentile(dists[:, 0], 95)),
-        "nearest_distance_max_m": float(np.max(dists[:, 0])),
+        **nearest_stats,
     }
     return beta_out, meta
 
 
-def compute_multiresponse_scores(points: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
+def compute_multiresponse_scores(
+    points: pd.DataFrame, responses: dict[str, Path]
+) -> tuple[pd.DataFrame, dict]:
     out = points.copy()
     interpolation_meta = {}
     response_stds = {}
 
-    for response, coef_path in RESPONSES.items():
+    for response, coef_path in responses.items():
         beta_df, meta = interpolate_response_coefficients(out, response, coef_path)
         out = pd.concat([out, beta_df], axis=1)
         interpolation_meta[response] = meta
@@ -200,7 +303,7 @@ def compute_multiresponse_scores(points: pd.DataFrame) -> tuple[pd.DataFrame, di
         "human_pressure_score",
         "human_net",
     ]:
-        cols = [f"{response}_{name}" for response in RESPONSES]
+        cols = [f"{response}_{name}" for response in responses]
         out[name] = out[cols].mean(axis=1)
 
     out["max_constraint_score"] = out[
@@ -230,8 +333,8 @@ def compute_multiresponse_scores(points: pd.DataFrame) -> tuple[pd.DataFrame, di
     return out, meta
 
 
-def load_l3() -> gpd.GeoDataFrame:
-    gdf = gpd.read_file(ECO_L3).to_crs("EPSG:5070")
+def load_l3(eco_l3_path: Path, ecoregion_unit: str) -> gpd.GeoDataFrame:
+    gdf = gpd.read_file(eco_l3_path).to_crs("EPSG:5070")
     keep = [
         "US_L3CODE",
         "US_L3NAME",
@@ -243,18 +346,29 @@ def load_l3() -> gpd.GeoDataFrame:
         "NA_L1NAME",
         "geometry",
     ]
-    dissolved = gdf[keep].dissolve(
-        by="US_L3CODE",
-        aggfunc="first",
-        as_index=False,
+    if ecoregion_unit == "dissolved-code":
+        out = gdf[keep].dissolve(by="US_L3CODE", aggfunc="first", as_index=False)
+    else:
+        out = gdf[keep].reset_index(drop=True).copy()
+    # Use the release's stable lexical EPA-code order while preserving the
+    # source order of disjoint features that share a code.
+    out = (
+        out.assign(_code_sort=out["US_L3CODE"].astype(str))
+        .sort_values("_code_sort", kind="mergesort")
+        .drop(columns="_code_sort")
+        .reset_index(drop=True)
     )
-    dissolved["eco_id"] = dissolved["US_L3CODE"].astype(str) + " " + dissolved["US_L3NAME"].astype(str)
-    return dissolved
+    out["_eco_feature_id"] = np.arange(len(out), dtype=np.int64)
+    out["eco_id"] = out["US_L3CODE"].astype(str) + " " + out["US_L3NAME"].astype(str)
+    return out
 
 
-def spatial_join(points: pd.DataFrame, ecoregions: gpd.GeoDataFrame) -> pd.DataFrame:
+def spatial_join(
+    points: pd.DataFrame, ecoregions: gpd.GeoDataFrame, unmatched_policy: str
+) -> pd.DataFrame:
     pts = gpd.GeoDataFrame(points, geometry=gpd.points_from_xy(points["x"], points["y"]), crs="EPSG:5070")
     join_cols = [
+        "_eco_feature_id",
         "eco_id",
         "US_L3CODE",
         "US_L3NAME",
@@ -268,7 +382,7 @@ def spatial_join(points: pd.DataFrame, ecoregions: gpd.GeoDataFrame) -> pd.DataF
     ]
     joined = gpd.sjoin(pts, ecoregions[join_cols], how="left", predicate="within")
     unmatched = joined["eco_id"].isna()
-    if unmatched.any():
+    if unmatched.any() and unmatched_policy == "nearest":
         nearest = gpd.sjoin_nearest(
             pts.loc[unmatched, pts.columns],
             ecoregions[join_cols],
@@ -356,7 +470,7 @@ def aggregate_l3(joined: pd.DataFrame, ecoregions: gpd.GeoDataFrame) -> gpd.GeoD
         "project_region_mode": ("region", mode_or_blank),
         "nearest_l3_distance_max_m": ("nearest_l3_distance_m", "max"),
     }
-    for response in RESPONSES:
+    for response in RESPONSE_PATH_CANDIDATES:
         for score in [
             "forest_structure_support",
             "forest_structure_constraint",
@@ -368,6 +482,7 @@ def aggregate_l3(joined: pd.DataFrame, ecoregions: gpd.GeoDataFrame) -> gpd.GeoD
     grouped = (
         joined.groupby(
             [
+                "_eco_feature_id",
                 "eco_id",
                 "US_L3CODE",
                 "US_L3NAME",
@@ -418,6 +533,7 @@ def aggregate_l3(joined: pd.DataFrame, ecoregions: gpd.GeoDataFrame) -> gpd.GeoD
     out = ecoregions.merge(
         zoned,
         on=[
+            "_eco_feature_id",
             "eco_id",
             "US_L3CODE",
             "US_L3NAME",
@@ -429,6 +545,7 @@ def aggregate_l3(joined: pd.DataFrame, ecoregions: gpd.GeoDataFrame) -> gpd.GeoD
             "NA_L1NAME",
         ],
     )
+    out = out.drop(columns="_eco_feature_id")
     return gpd.GeoDataFrame(out, geometry="geometry", crs=ecoregions.crs)
 
 
@@ -471,9 +588,10 @@ def summarize_zone_column(zoned: gpd.GeoDataFrame, zone_col: str, output_col: st
     return pd.DataFrame(rows)
 
 
-def compare_to_resistance_only(zoned: gpd.GeoDataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    old_path = BASE / "resilience_management_zoning_epa_l3_no_t80_2026-05-29/epa_l3_resilience_management_zones_no_t80.csv"
-    old = pd.read_csv(old_path)
+def compare_to_resistance_only(
+    zoned: gpd.GeoDataFrame, reference_path: Path
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    old = pd.read_csv(reference_path)
     key_cols = [
         "eco_id",
         "US_L3CODE",
@@ -520,7 +638,12 @@ def compare_to_resistance_only(zoned: gpd.GeoDataFrame) -> tuple[pd.DataFrame, p
     return compare, management_transition, mechanism_transition
 
 
-def plot_l3(zoned: gpd.GeoDataFrame, summary: pd.DataFrame, mechanism_summary: pd.DataFrame) -> None:
+def plot_l3(
+    zoned: gpd.GeoDataFrame,
+    summary: pd.DataFrame,
+    mechanism_summary: pd.DataFrame,
+    output_dir: Path,
+) -> None:
     fig, axes = plt.subplots(2, 3, figsize=(19, 11), constrained_layout=True)
     panels = [
         ("forest_structure_support", "Multi-response forest support", "Greens"),
@@ -566,11 +689,11 @@ def plot_l3(zoned: gpd.GeoDataFrame, summary: pd.DataFrame, mechanism_summary: p
     ]
     fig.legend(handles=handles, loc="lower center", ncol=3, fontsize=8, frameon=False)
     fig.suptitle("Multi-response MGWR-informed zoning by EPA Level III ecoregion", fontsize=15, fontweight="bold")
-    fig.savefig(OUT_DIR / "multiresponse_mgwr_zoning_epa_l3.png", dpi=180, bbox_inches="tight")
+    fig.savefig(output_dir / "multiresponse_mgwr_zoning_epa_l3.png", dpi=180, bbox_inches="tight")
     plt.close(fig)
 
 
-def write_notes(meta: dict) -> None:
+def write_notes(meta: dict, output_dir: Path) -> None:
     responses = list(meta["response_stds_used_for_effect_standardization"])
     response_text = ", ".join(responses)
     response_scope = (
@@ -616,20 +739,40 @@ mechanism zones as conservation/restoration-priority classes.
 {json.dumps(meta, indent=2)}
 ```
 """
-    (OUT_DIR / "multiresponse_zoning_notes.md").write_text(text, encoding="utf-8")
+    (output_dir / "multiresponse_zoning_notes.md").write_text(text, encoding="utf-8")
 
 
 def main() -> None:
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    points = load_points()
-    scored, score_meta = compute_multiresponse_scores(points)
-    ecoregions = load_l3()
-    joined = spatial_join(scored, ecoregions)
-    raw_counts = joined.groupby("eco_id", dropna=False).size()
+    args = parse_args()
+    points_path = checked_file(args.points, "Point-zone input")
+    eco_l3_path = checked_file(args.eco_l3, "EPA Level III vector")
+    coef_dir = Path(args.coef_dir).expanduser().resolve()
+    responses = response_paths(coef_dir)
+    output_dir = Path(args.output_dir).expanduser().resolve()
+    output_dir.mkdir(parents=True, exist_ok=True)
+    reference_path = (
+        checked_file(args.resistance_only_reference, "Resistance-only reference")
+        if args.resistance_only_reference
+        else None
+    )
+
+    print(f"[zoning 1/6] Loading point input: {points_path}", flush=True)
+    points = load_points(points_path, list(responses))
+    print(f"[zoning 2/6] Interpolating MGWR coefficients for {len(points):,} points", flush=True)
+    scored, score_meta = compute_multiresponse_scores(points, responses)
+    print(f"[zoning 3/6] Loading EPA Level III ecoregions: {eco_l3_path}", flush=True)
+    ecoregions = load_l3(eco_l3_path, args.ecoregion_unit)
+    print("[zoning 4/6] Joining points and aggregating ecoregions", flush=True)
+    joined = spatial_join(scored, ecoregions, args.unmatched_policy)
+    raw_counts = joined.groupby("_eco_feature_id", dropna=False).size()
     zoned = aggregate_l3(joined, ecoregions)
     summary = summarize_zone_column(zoned, "management_zone", "management_zone")
     mechanism_summary = summarize_zone_column(zoned, "mechanism_zone", "mechanism_zone")
-    compare, management_transition, mechanism_transition = compare_to_resistance_only(zoned)
+    comparison = (
+        compare_to_resistance_only(zoned, reference_path)
+        if reference_path is not None
+        else None
+    )
 
     point_keep = [
         "pixel_id",
@@ -651,19 +794,22 @@ def main() -> None:
         "FS_EVT_group_class",
     ]
     point_keep = [c for c in point_keep if c in scored.columns]
-    scored[point_keep].to_parquet(OUT_DIR / "multiresponse_point_mechanism_scores.parquet", index=False)
+    print(f"[zoning 5/6] Writing intermediate and EPA L3 outputs to: {output_dir}", flush=True)
+    scored[point_keep].to_parquet(output_dir / "multiresponse_point_mechanism_scores.parquet", index=False)
     joined.drop(columns=[c for c in joined.columns if c.startswith("beta_")], errors="ignore").to_parquet(
-        OUT_DIR / "points_with_epa_l3_assignment_multiresponse.parquet",
+        output_dir / "points_with_epa_l3_assignment_multiresponse.parquet",
         index=False,
     )
-    zoned.to_file(OUT_DIR / "epa_l3_multiresponse_management_zones.gpkg", driver="GPKG")
-    zoned.drop(columns="geometry").to_csv(OUT_DIR / "epa_l3_multiresponse_management_zones.csv", index=False)
-    summary.to_csv(OUT_DIR / "epa_l3_multiresponse_zone_summary.csv", index=False)
-    mechanism_summary.to_csv(OUT_DIR / "epa_l3_multiresponse_mechanism_zone_summary.csv", index=False)
-    compare.to_csv(OUT_DIR / "comparison_vs_resistance_only_no_t80.csv", index=False)
-    management_transition.to_csv(OUT_DIR / "management_zone_transition_vs_resistance_only.csv")
-    mechanism_transition.to_csv(OUT_DIR / "mechanism_zone_transition_vs_resistance_only.csv")
-    plot_l3(zoned, summary, mechanism_summary)
+    zoned.to_file(output_dir / "epa_l3_multiresponse_management_zones.gpkg", driver="GPKG")
+    zoned.drop(columns="geometry").to_csv(output_dir / "epa_l3_multiresponse_management_zones.csv", index=False)
+    summary.to_csv(output_dir / "epa_l3_multiresponse_zone_summary.csv", index=False)
+    mechanism_summary.to_csv(output_dir / "epa_l3_multiresponse_mechanism_zone_summary.csv", index=False)
+    if comparison is not None:
+        compare, management_transition, mechanism_transition = comparison
+        compare.to_csv(output_dir / "comparison_vs_resistance_only_no_t80.csv", index=False)
+        management_transition.to_csv(output_dir / "management_zone_transition_vs_resistance_only.csv")
+        mechanism_transition.to_csv(output_dir / "mechanism_zone_transition_vs_resistance_only.csv")
+    plot_l3(zoned, summary, mechanism_summary, output_dir)
 
     meta = {
         "n_input_points": int(len(points)),
@@ -683,13 +829,24 @@ def main() -> None:
         .sum()
         .astype(int)
         .to_dict(),
-        "management_zone_changed_l3_vs_resistance_only": int(compare["management_zone_changed"].sum()),
-        "mechanism_zone_changed_l3_vs_resistance_only": int(compare["mechanism_zone_changed"].sum()),
-        "output_dir": str(OUT_DIR),
+        "points_path": str(points_path),
+        "eco_l3_path": str(eco_l3_path),
+        "ecoregion_unit": args.ecoregion_unit,
+        "unmatched_policy": args.unmatched_policy,
+        "coef_dir": str(coef_dir),
+        "resistance_only_reference": str(reference_path) if reference_path else None,
+        "management_zone_changed_l3_vs_resistance_only": (
+            int(comparison[0]["management_zone_changed"].sum()) if comparison else None
+        ),
+        "mechanism_zone_changed_l3_vs_resistance_only": (
+            int(comparison[0]["mechanism_zone_changed"].sum()) if comparison else None
+        ),
+        "output_dir": str(output_dir),
         **score_meta,
     }
-    (OUT_DIR / "run_metadata.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
-    write_notes(meta)
+    (output_dir / "run_metadata.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
+    write_notes(meta, output_dir)
+    print("[zoning 6/6] Complete", flush=True)
     print(json.dumps(meta, ensure_ascii=False, indent=2))
 
 

@@ -6,6 +6,7 @@ The following analysis inputs are small enough to remain versioned with the code
 
 - `data/processed/westernus_model_table.parquet`: final 133,409-row model table;
 - `data/processed/westernus_model_table_schema.csv`: field names and physical types;
+- `data/processed/westernus_model_table_dictionary.csv`: one-row-per-column units, windows, definitions, derivations, and sources;
 - `data/processed/westernus_model_table_summary.json`: compact validation summary;
 - `data/splits/westernus_split_assignments.parquet`: deterministic random and 100 km spatial-block assignments;
 - `data/splits/split_metadata.json` and `split_summary.csv`: split parameters and counts;
@@ -26,6 +27,16 @@ Directory layout:
 ```
 
 Files in Google Drive are convenience copies; the checksums in `provenance/drive_release_manifest.csv` identify the exact release bytes.
+
+The five exact inputs required to rebuild the final zoning are in `02_large_derived_artifacts/`:
+
+- [`spatialized_point_zones_full_candidate.parquet`](https://drive.google.com/file/d/1Drj3YzEIK_0CY-4EyGaashdeosp2rt99/view);
+- [`Resistance_mgwr_complete_coefficients.parquet`](https://drive.google.com/file/d/1r87WJvx7ufoo5aIbmpB7AzfTUmA6CH9w/view);
+- [`IRI_good_pow2_mgwr_complete_coefficients.parquet`](https://drive.google.com/file/d/1QJXVhXZRu99sYZtijmjyF5NvIBmTU616/view);
+- [`STAB_good_pow2_mgwr_complete_coefficients.parquet`](https://drive.google.com/file/d/14iQ5FASFuP7lwhUFi1expS9ZgAGIgkUo/view);
+- [`westernus_epa_l3_zoning_analysis_units.gpkg`](https://drive.google.com/file/d/1vze_NF-Oa8IaKI26510Zp0nSGs4FqA17/view).
+
+The first file is the input point table; `points_with_epa_l3_assignment_multiresponse.parquet` is an output of the zoning step. The three complete-sample coefficient tables and exact EPA-derived analysis-unit layer close the former Step 9 provenance gap. See [`REPRODUCIBILITY.md`](REPRODUCIBILITY.md#9-build-management-zones) for commands and SHA-256 values.
 
 ## Raw source data
 

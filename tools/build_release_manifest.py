@@ -87,6 +87,7 @@ def main() -> None:
         ROOT / "provenance/model_code_inventory.csv",
         model_rows(rows),
         ["path", "bytes", "sha256", "status"],
+        lineterminator="\n",
     )
     print(f"Manifested {len(rows)} files.")
 

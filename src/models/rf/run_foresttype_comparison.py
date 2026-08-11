@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import time
 
 import numpy as np
 import pandas as pd
@@ -143,7 +144,9 @@ def main() -> None:
     args = parse_args()
     output_dir = Path(args.output_dir).expanduser().resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
-    raw = pd.read_parquet(Path(args.input).expanduser().resolve())
+    input_path = Path(args.input).expanduser().resolve()
+    print(f"[RF] Loading model table: {input_path}", flush=True)
+    raw = pd.read_parquet(input_path)
     if args.sample_n is not None and args.sample_n < len(raw):
         raw = raw.sample(n=args.sample_n, random_state=args.random_state).sort_values("pixel_id")
     df, group_columns, code_columns = prepare(raw)
@@ -157,6 +160,9 @@ def main() -> None:
     metrics_rows: list[dict] = []
     importance_rows: list[dict] = []
     prediction_rows: list[pd.DataFrame] = []
+    completed_models = 0
+    expected_models = len(args.responses) * len(variants) * 2
+    run_start = time.perf_counter()
 
     for response in args.responses:
         for variant, predictors in variants.items():
@@ -174,6 +180,14 @@ def main() -> None:
             for split_name, (train_pos, test_pos) in splits.items():
                 train = work.iloc[train_pos]
                 test = work.iloc[test_pos]
+                completed_models += 1
+                fit_start = time.perf_counter()
+                print(
+                    f"[RF {completed_models}/{expected_models}] "
+                    f"response={response} variant={variant} split={split_name} "
+                    f"train={len(train):,} test={len(test):,} predictors={len(predictors)}",
+                    flush=True,
+                )
                 model = RandomForestRegressor(
                     n_estimators=args.trees,
                     random_state=args.random_state,
@@ -182,6 +196,8 @@ def main() -> None:
                 model.fit(train[predictors], train[response])
                 predicted = model.predict(test[predictors])
                 observed = test[response].to_numpy(dtype=float)
+                r2 = float(r2_score(observed, predicted))
+                rmse = float(np.sqrt(mean_squared_error(observed, predicted)))
                 metrics_rows.append(
                     {
                         "response": response,
@@ -191,9 +207,15 @@ def main() -> None:
                         "train_rows": int(len(train)),
                         "test_rows": int(len(test)),
                         "n_predictors": int(len(predictors)),
-                        "r2": float(r2_score(observed, predicted)),
-                        "rmse": float(np.sqrt(mean_squared_error(observed, predicted))),
+                        "r2": r2,
+                        "rmse": rmse,
                     }
+                )
+                print(
+                    f"[RF {completed_models}/{expected_models}] done "
+                    f"r2={r2:.6f} rmse={rmse:.6f} "
+                    f"elapsed={time.perf_counter() - fit_start:.1f}s",
+                    flush=True,
                 )
                 for feature, importance in zip(predictors, model.feature_importances_):
                     importance_rows.append(
@@ -232,6 +254,11 @@ def main() -> None:
         "sample_n": args.sample_n,
     }
     (output_dir / "run_metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+    print(
+        f"[RF] Completed {completed_models} fits in "
+        f"{(time.perf_counter() - run_start) / 60:.1f} min; outputs: {output_dir}",
+        flush=True,
+    )
     print(metrics.to_string(index=False))
 
 

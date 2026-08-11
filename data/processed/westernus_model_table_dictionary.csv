@@ -1,0 +1,84 @@
+column,dtype,unit,temporal_window,description,derivation,source
+pixel_id,int64,identifier,static,Stable row identifier for the released candidate-pixel table,Sequential integer assigned after row-major extraction of retained pixels,Project grid
+row,int32,index,static,Zero-based row index in the 1 km reference grid,Reference-raster row of the pixel center,Project grid
+col,int32,index,static,Zero-based column index in the 1 km reference grid,Reference-raster column of the pixel center,Project grid
+x,float64,metre,static,Pixel-center easting in NAD83 / CONUS Albers,Computed from the reference-grid affine transform,Project grid
+y,float64,metre,static,Pixel-center northing in NAD83 / CONUS Albers,Computed from the reference-grid affine transform,Project grid
+t0_year,int16,calendar year,2005–2022,First retained fire year for the pixel,Selected from the MTBS fire-year layer after candidate filtering,MTBS
+sev,float32,MTBS severity class code,at t0,Fire severity class at the retained fire event,Sampled from the MTBS severity layer for t0; released codes range from 1 through 6,MTBS
+Forest_at_t0,float32,binary 0/1,at t0,Indicator that the pixel met the retained forest mask at fire time,NLCD-by-t0 forest mask; released rows are all 1,NLCD / project mask
+Bi,float32,RESI proportion,t0-5 through t0-1,Pre-fire RESI baseline,Mean of valid annual RESI values in the five years before fire,Project-derived annual RESI
+Rmin,float32,RESI proportion,t0 through t0+1,Immediate post-fire RESI minimum,Minimum annual RESI across the fire year and following year,Project-derived annual RESI
+Resistance,float32,ratio,t0 through t0+1 relative to pre-fire,Immediate resistance relative to baseline,Rmin divided by Bi,Project-derived annual RESI
+T50,float32,years after t0,t0+2 through t0+9,Time to recover to 50 percent of Bi,First post-fire offset reaching 0.50 times Bi; set to 10 when not reached,Project-derived annual RESI
+T50_reached,float32,binary 0/1,t0+2 through t0+9,Whether the 50 percent recovery threshold was observed,One when any eligible post-fire RESI reaches 0.50 times Bi,Project-derived annual RESI
+T80,float32,years after t0,t0+2 through t0+9,Time to recover to 80 percent of Bi,First post-fire offset reaching 0.80 times Bi; set to 10 when not reached,Project-derived annual RESI
+T80_reached,float32,binary 0/1,t0+2 through t0+9,Whether the 80 percent recovery threshold was observed,One when any eligible post-fire RESI reaches 0.80 times Bi,Project-derived annual RESI
+T90,float32,years after t0,t0+2 through t0+9,Time to recover to 90 percent of Bi,First post-fire offset reaching 0.90 times Bi; set to 10 when not reached,Project-derived annual RESI
+T90_reached,float32,binary 0/1,t0+2 through t0+9,Whether the 90 percent recovery threshold was observed,One when any eligible post-fire RESI reaches 0.90 times Bi,Project-derived annual RESI
+T95,float32,years after t0,t0+2 through t0+9,Time to recover to 95 percent of Bi,First post-fire offset reaching 0.95 times Bi; set to 10 when not reached,Project-derived annual RESI
+T95_reached,float32,binary 0/1,t0+2 through t0+9,Whether the 95 percent recovery threshold was observed,One when any eligible post-fire RESI reaches 0.95 times Bi,Project-derived annual RESI
+IRI_gap,float32,proportion,t0 through t0+9,Integrated recovery deficit relative to the pre-fire baseline,clip(1 - observed ten-year RESI area / baseline area; 0; 1),Project-derived annual RESI
+IRI_good,float32,proportion,t0 through t0+9,Integrated recovery index oriented so larger is better,clip(1 - IRI_gap; 0; 1),Project-derived annual RESI
+IRI_good_pow2,float32,proportion squared,t0 through t0+9,Squared integrated recovery response used in the main analysis,IRI_good squared,Project-derived annual RESI
+RESI_post_CV,float32,ratio,t0 through t0+9,Coefficient of variation of the interpolated post-fire RESI series,Standard deviation divided by mean of the nonnegative ten-year RESI segment,Project-derived annual RESI
+STAB_CV,float32,index 0–1,t0 through t0+9,Stability transform of post-fire RESI variability,1 divided by (1 + RESI_post_CV),Project-derived annual RESI
+STAB_good,float32,index 0–1,t0 through t0+9,Stability index oriented so larger is better,STAB_CV clipped to [0; 1],Project-derived annual RESI
+STAB_good_pow2,float32,index squared,t0 through t0+9,Squared post-fire stability response used in the main analysis,STAB_good squared,Project-derived annual RESI
+AUC_deficit,float32,proportion,t0 through t0+9,Cumulative RESI deficit relative to the pre-fire baseline,clip((baseline area - observed ten-year RESI area) / baseline area; 0; 1),Project-derived annual RESI
+FS_EVT2022_code,int32,LANDFIRE EVT code,2022,Mode existing-vegetation-type code at 1 km,Modal aggregation of LANDFIRE EVT 2022 to the project grid,LANDFIRE EVT 2022
+FS_EVT_resistance_proxy,float32,ordinal score 0–4,2022,Broad forest-type resistance proxy,Lookup from EVT group: nonwoody 0; shrub 1; deciduous 2; mixed 3; conifer 4 for retained tree/shrub classes,LANDFIRE EVT 2022
+FS_EVT_regeneration_proxy,float32,ordinal score 0–4,2022,Broad forest-type regeneration proxy,Lookup from EVT group: nonwoody 0; shrub 4; deciduous 3; mixed 2; conifer 1 for retained tree/shrub classes,LANDFIRE EVT 2022
+FS_EVT_group_class,object,category,2022,Broad vegetation group used by RF M2,Rule-based mapping of EVT metadata to nonwoody; shrub; deciduous; mixed; or conifer,LANDFIRE EVT 2022
+TS_elev_m,float32,metre,static,Mean elevation at the 1 km pixel,Sampled from the 3DEP-derived project topography stack,USGS 3DEP
+TS_slope_deg,float32,degree,static,Terrain slope at the 1 km pixel,Sampled from the 3DEP-derived project topography stack,USGS 3DEP
+TS_northness,float32,index -1 to 1,static,North-facing component of aspect,Cosine of terrain aspect,USGS 3DEP
+TS_eastness,float32,index -1 to 1,static,East-facing component of aspect,Sine of terrain aspect,USGS 3DEP
+TS_twi,float32,dimensionless index,static,Topographic wetness index,Sampled from the 3DEP-derived project TWI layer,USGS 3DEP
+TS_roughness,float32,metre-scale index,static,Local terrain roughness derived from elevation,Sampled from the 3DEP-derived project roughness layer,USGS 3DEP
+TS_SOC_0_30cm,float32,g per kg; -9999 is nodata,static,Soil organic carbon concentration proxy for 0–30 cm,1 km aggregate of the SoilGrids 0–30 cm SOC proxy band; 15 released rows retain the source-stack -9999 nodata sentinel,SoilGrids 250 m v2
+HUM_popdens_source_year,int16,calendar year,nearest available year to t0,GPW source year selected for each pixel,Nearest available GPW year to t0,GPWv4
+HUM_popdens_win10km,float32,persons per km²,nearest available year to t0,Population-density pressure within the 10 km product window,Sampled from the project GPWv4 10 km-window population-density stack,GPWv4
+HUM_viirs_source_year,int16,calendar year,nearest available year to t0,VIIRS annual source year selected for each pixel,Nearest available VIIRS year to t0,VIIRS annual VNL
+HUM_viirs_near_t0,float32,nW cm-2 sr-1,nearest available year to t0,Annual nighttime-light radiance near the fire year,Sampled from the nearest-year annual VIIRS nighttime-light layer,VIIRS annual VNL
+HUM_imperv_source_year,int16,calendar year,nearest available year to t0,NLCD imperviousness source year selected for each pixel,Nearest available NLCD imperviousness year to t0,NLCD / Annual NLCD
+HUM_imperv_near_t0,float32,percent,nearest available year to t0,Impervious surface percentage near the fire year,Sampled from the nearest-year NLCD imperviousness layer,NLCD / Annual NLCD
+CLIM_pr_sum_pre,float32,mm per year,mean of t0-3 through t0-1,Pre-fire annual precipitation,Mean of three annual gridMET precipitation sums,gridMET
+CLIM_pr_sum_post,float32,mm per year,mean of t0 through t0+1,Early post-fire annual precipitation,Mean of two annual gridMET precipitation sums,gridMET
+CLIM_eto_sum_pre,float32,mm per year,mean of t0-3 through t0-1,Pre-fire reference evapotranspiration,Mean of three annual gridMET ETo sums,gridMET
+CLIM_eto_sum_post,float32,mm per year,mean of t0 through t0+1,Early post-fire reference evapotranspiration,Mean of two annual gridMET ETo sums,gridMET
+CLIM_vpd_mean_pre,float32,kPa,mean of t0-3 through t0-1,Pre-fire mean vapor-pressure deficit,Mean of three annual mean-VPD values,gridMET
+CLIM_vpd_mean_post,float32,kPa,mean of t0 through t0+1,Early post-fire mean vapor-pressure deficit,Mean of two annual mean-VPD values,gridMET
+CLIM_tmmx_mean_pre,float32,degree C,mean of t0-3 through t0-1,Pre-fire mean daily maximum temperature,Mean of three annual mean-maximum-temperature values,gridMET
+CLIM_tmmx_mean_post,float32,degree C,mean of t0 through t0+1,Early post-fire mean daily maximum temperature,Mean of two annual mean-maximum-temperature values,gridMET
+CLIM_tmmn_mean_pre,float32,degree C,mean of t0-3 through t0-1,Pre-fire mean daily minimum temperature,Mean of three annual mean-minimum-temperature values,gridMET
+CLIM_tmmn_mean_post,float32,degree C,mean of t0 through t0+1,Early post-fire mean daily minimum temperature,Mean of two annual mean-minimum-temperature values,gridMET
+CLIM_tmmx_max_pre,float32,degree C,mean of t0-3 through t0-1,Pre-fire annual maximum of daily maximum temperature,Mean of three annual maximum-temperature values,gridMET
+CLIM_tmmx_max_post,float32,degree C,mean of t0 through t0+1,Early post-fire annual maximum of daily maximum temperature,Mean of two annual maximum-temperature values,gridMET
+CLIM_hot_days_30C_pre,float32,days per year,mean of t0-3 through t0-1,Pre-fire number of days above 30 C,Mean of three annual hot-day counts,gridMET
+CLIM_hot_days_30C_post,float32,days per year,mean of t0 through t0+1,Early post-fire number of days above 30 C,Mean of two annual hot-day counts,gridMET
+CLIM_hot_days_35C_pre,float32,days per year,mean of t0-3 through t0-1,Pre-fire number of days above 35 C,Mean of three annual hot-day counts,gridMET
+CLIM_hot_days_35C_post,float32,days per year,mean of t0 through t0+1,Early post-fire number of days above 35 C,Mean of two annual hot-day counts,gridMET
+CLIM_water_deficit_pre,float32,mm per year,mean of t0-3 through t0-1,Pre-fire climatic water deficit,Mean of three annual values of ETo minus precipitation,gridMET
+CLIM_water_deficit_post,float32,mm per year,mean of t0 through t0+1,Early post-fire climatic water deficit,Mean of two annual values of ETo minus precipitation,gridMET
+CLIM_aridity_pre,float32,ratio,mean of t0-3 through t0-1,Pre-fire aridity ratio,Mean of three annual ETo-to-precipitation ratios,gridMET
+CLIM_aridity_post,float32,ratio,mean of t0 through t0+1,Early post-fire aridity ratio,Mean of two annual ETo-to-precipitation ratios,gridMET
+CLIM_tmmx_std_pre,float32,degree C,mean of t0-3 through t0-1,Pre-fire within-year variability of daily maximum temperature,Mean of three annual standard deviations of daily maximum temperature,gridMET
+CLIM_tmmx_std_post,float32,degree C,mean of t0 through t0+1,Early post-fire within-year variability of daily maximum temperature,Mean of two annual standard deviations of daily maximum temperature,gridMET
+CLIM_vpd_std_pre,float32,kPa,mean of t0-3 through t0-1,Pre-fire within-year variability of vapor-pressure deficit,Mean of three annual standard deviations of daily VPD,gridMET
+CLIM_vpd_std_post,float32,kPa,mean of t0 through t0+1,Early post-fire within-year variability of vapor-pressure deficit,Mean of two annual standard deviations of daily VPD,gridMET
+FS_CBH_1km,float32,LANDFIRE CBH encoded units (0.1 m),2022,Static canopy base height at 1 km,Average-resampled LANDFIRE 2022 CBH; divide stored values by 10 for metres,LANDFIRE CBH
+FS_CBH_1km_z,float32,z-score,2022,Standardized static canopy base height,Full-table z-score of FS_CBH_1km,LANDFIRE CBH / project derived
+FS_CBH_t0agg_source_year,int16,calendar year,nearest available year to t0,LANDFIRE CBH source year selected for each pixel,Nearest of 2008; 2010; 2012; 2014; 2016; or 2022 with earlier year winning ties,LANDFIRE CBH
+FS_CBH_t0agg,float32,LANDFIRE CBH encoded units (0.1 m),nearest available year to t0,Fire-aligned canopy base height at 1 km,Average-resampled CBH from FS_CBH_t0agg_source_year; divide stored values by 10 for metres,LANDFIRE CBH
+FS_CBH_t0agg_z,float32,z-score,nearest available year to t0,Standardized fire-aligned canopy base height,Full-table z-score of FS_CBH_t0agg,LANDFIRE CBH / project derived
+FS_TCC_t0_source_year,int16,calendar year,exact t0 year,Tree-canopy-cover source year selected for each pixel,Set equal to t0_year for annual 2000–2023 TCC,USFS TCC v2023-5
+FS_TCC_t0,float64,percent,exact t0 year,Tree canopy cover at the fire year,Mean aggregation of annual 30 m NLCD percent tree canopy cover to 1 km,USFS TCC v2023-5
+FS_TCC_t0_z,float32,z-score,exact t0 year,Standardized fire-year tree canopy cover,Full-table z-score of FS_TCC_t0,USFS TCC / project derived
+HUM_roaddens_r5km,float32,km of line per km²,static project snapshot,Road density within a 5 km circular neighborhood,Exact OSM road-line length by 1 km cell; circular 5 km sum divided by circle area,OpenStreetMap via Geofabrik
+HUM_traildens_r10km,float32,km of line per km²,static project snapshot,Trail density within a 10 km circular neighborhood,Exact OSM trail-line length by 1 km cell; circular 10 km sum divided by circle area,OpenStreetMap via Geofabrik
+HUM_roaddens_r5km_z,float32,z-score,static project snapshot,Standardized 5 km road density,Full-table z-score of HUM_roaddens_r5km,OpenStreetMap / project derived
+HUM_traildens_r10km_z,float32,z-score,static project snapshot,Standardized 10 km trail density,Full-table z-score of HUM_traildens_r10km,OpenStreetMap / project derived
+lon_wgs84,float64,decimal degree,static,Pixel-center longitude in WGS84,Coordinate transformation from EPSG:5070 to EPSG:4326,Project grid
+lat_wgs84,float64,decimal degree,static,Pixel-center latitude in WGS84,Coordinate transformation from EPSG:5070 to EPSG:4326,Project grid
+region,object,category,static,Deterministic broad reporting region,Longitude/latitude rule in src/preprocessing/assign_reporting_regions.py,Project derived
