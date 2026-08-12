@@ -18,7 +18,6 @@ Validation date: 2026-08-11.
 - No personal local path, project email address, common private-key marker, GitHub personal-access-token pattern, or AWS access-key pattern was found in the text release files.
 - No release file exceeds 90 MB.
 
-
 ## Scope note
 
 The complete MGWR calibrations themselves were not repeated during this laptop-oriented release check; their retained coefficient tables were used to reproduce the downstream zoning. The repository documents expected resources and supplies Slurm entry points for those calibrations.

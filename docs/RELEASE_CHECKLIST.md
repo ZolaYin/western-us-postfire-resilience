@@ -8,7 +8,6 @@ This checklist is for versioned repository releases.
 - [x] Add separate code and derived-data licenses.
 - [x] Add `CITATION.cff` and a repository citation.
 - [x] Publish a read-only Google Drive data-release folder for downloadable and larger artifacts.
-
 - [x] Regenerate `provenance/file_manifest.csv` for this release and verify SHA-256 values.
 - [x] Run the retained laptop workflow, start the MGWR entry point, and compare regenerated RF, OLS, and zoning outputs with `results/`.
 - [ ] Replace the repository citation with the final manuscript citation and DOI when they become available.
