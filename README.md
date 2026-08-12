@@ -100,14 +100,6 @@ The `region` field is a deterministic longitude/latitude partition, not an exter
 
 Exact commands are in [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md).
 
-## Citation and licenses
-
-Until a journal/archival DOI is assigned, cite the repository as:
-
-> Yin, Q. (2026). *Western U.S. Post-fire Forest Resilience: reproducibility package* (Version 0.1.0). GitHub. https://github.com/ZolaYin/western-us-postfire-resilience
-
-Machine-readable metadata are provided in [`CITATION.cff`](CITATION.cff). Project code is released under the [MIT License](LICENSE). Project-created data tables and results are released under [CC BY 4.0](LICENSE-DATA.md), subject to the upstream attribution and license notes documented in [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md). OpenStreetMap-derived fields retain applicable ODbL obligations.
-
 
 
 
