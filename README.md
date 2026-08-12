@@ -99,7 +99,3 @@ The `region` field is a deterministic longitude/latitude partition, not an exter
 7. Translate local MGWR effects to EPA Level III ecoregion management zones.
 
 Exact commands are in [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md).
-
-
-
-
