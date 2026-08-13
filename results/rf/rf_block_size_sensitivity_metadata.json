@@ -1,0 +1,56 @@
+{
+  "input": "data/processed/westernus_model_table.parquet",
+  "saved_splits": "data/splits/westernus_split_assignments.parquet",
+  "responses": [
+    "Resistance",
+    "IRI_good_pow2",
+    "STAB_good_pow2"
+  ],
+  "block_km": [
+    50.0,
+    100.0,
+    200.0
+  ],
+  "predictors": [
+    "TS_elev_m_z",
+    "TS_slope_deg_z",
+    "TS_northness_z",
+    "TS_eastness_z",
+    "TS_twi_z",
+    "TS_roughness_z",
+    "TS_SOC_0_30cm_z",
+    "FS_TCC_t0_z",
+    "FS_CBH_t0agg_z",
+    "HUM_popdens_win10km_log_z",
+    "HUM_roaddens_r5km_z",
+    "HUM_traildens_r10km_z",
+    "HUM_imperv_near_t0_z",
+    "HUM_viirs_near_t0_log_z",
+    "CLIM_pr_sum_pre_z",
+    "CLIM_eto_sum_pre_z",
+    "CLIM_tmmn_mean_pre_z",
+    "CLIM_hot_days_35C_pre_z",
+    "CLIM_aridity_pre_z",
+    "CLIM_tmmx_std_pre_z",
+    "CLIM_vpd_mean_pre_z",
+    "CLIM_vpd_std_pre_z",
+    "x",
+    "y",
+    "x_sq_z",
+    "y_sq_z",
+    "xy_z"
+  ],
+  "trees": 300,
+  "random_state": 42,
+  "test_size": 0.2,
+  "max_features": 1.0,
+  "max_depth": null,
+  "min_samples_leaf": 1,
+  "n_jobs": -1,
+  "sample_n": null,
+  "elapsed_minutes": 12.481372425000881,
+  "notes": [
+    "The random split is fitted once per response and reused across block sizes.",
+    "Released labels are used whenever the requested split column exists; other block sizes are deterministically generated in EPSG:5070."
+  ]
+}

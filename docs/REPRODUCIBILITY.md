@@ -11,6 +11,7 @@ Run commands from the repository root. Runtime and memory estimates below are ap
 | 3 | Table check and region validation | <2 min | <2 GB | Modern laptop |
 | 4 | Deterministic split rebuild | <2 min | <2 GB | Modern laptop |
 | 5 | 18 RF fits with 300 trees | about 10–20 min | 4–8 GB | Observed on a 10-core laptop; the script prints progress for every fit |
+| 5a | RF block-size sensitivity (12 fits) | about 10–20 min | 4–8 GB | Three responses; 50, 100, and 200 km blocks; progress is printed for every fit |
 | 6 | Build the 12,000-row MGWR sample | <1 min | <2 GB | Modern laptop |
 | 7 | OLS and residual spatial diagnostics | about 2–10 min | 4–8 GB | Modern laptop |
 | 8 | 12,000-point MGWR calibration | hours | 16–32 GB | Prefer 16 CPU cores; use `hpc/submit_mgwr.sbatch` |
@@ -74,6 +75,45 @@ python src/models/rf/run_foresttype_comparison.py \
 ```
 
 The command runs 18 fits: three responses × three forest-type representations × two validation schemes. Progress, elapsed time, R², and RMSE are printed after each fit. Small cross-platform differences are expected from parallel random-forest reduction; the independent release check found maximum differences of 0.0017 for R² and 0.0002 for RMSE while preserving all model rankings and transferability conclusions.
+
+To reproduce the regularized RF sensitivity check reported in the manuscript,
+reuse the same saved random and 100 km block assignments and set the two tree
+constraints explicitly:
+
+```bash
+python src/models/rf/run_foresttype_comparison.py \
+  --input data/processed/westernus_model_table.parquet \
+  --splits data/splits/westernus_split_assignments.parquet \
+  --output-dir output/rf_foresttype_regularized \
+  --responses Resistance IRI_good_pow2 STAB_good_pow2 \
+  --trees 300 --random-state 42 \
+  --max-depth 10 --min-samples-leaf 20
+```
+
+The defaults (`--max-depth None` internally and `--min-samples-leaf 1`) retain
+the primary unconstrained-RF behavior. The selected values are written to
+`run_metadata.json` for every run.
+
+To reproduce Supplementary Table S10 with the final 27-predictor RF-base
+specification, run the dedicated block-size sensitivity entry point:
+
+```bash
+python src/models/rf/run_block_size_sensitivity.py \
+  --input data/processed/westernus_model_table.parquet \
+  --splits data/splits/westernus_split_assignments.parquet \
+  --output-dir output/rf_block_size_sensitivity \
+  --responses Resistance IRI_good_pow2 STAB_good_pow2 \
+  --block-km 50 100 200 \
+  --trees 300 --random-state 42
+```
+
+The random 80/20 split is fitted once per response and reused across block
+sizes. The released 100 km labels are reused exactly; 50 and 200 km block
+labels are generated deterministically by flooring EPSG:5070 coordinates by
+the requested block width and applying `GroupShuffleSplit`. The script writes
+the performance table, row and block counts, split provenance, predictor list,
+RF settings, and runtime metadata. The released reference output is
+`results/rf/rf_block_size_sensitivity.csv`.
 
 ## 6. Prepare the shared MGWR sample
 
@@ -144,6 +184,7 @@ The optional `--resistance-only-reference` argument to `compute_multiresponse_zo
 
 - Main seed: 42.
 - RF estimators: 300 for the M1/M2/M3 comparison.
+- RF estimators: 300 for the block-size and regularization sensitivity checks.
 - Random validation test fraction: 0.2.
 - Spatial validation: 100 km projected blocks, held out with `GroupShuffleSplit` at a 0.2 target fraction.
 - Do not compare results generated from newly filtered rows to published values unless split eligibility and assignments match the saved partition table.

@@ -13,12 +13,12 @@ The released Parquet table contains project-derived 1 km attributes, not copies 
 | Canopy base height | LANDFIRE CBH for 2008, 2010, 2012, 2014, 2016, and 2022 | [LANDFIRE Data Distribution](https://landfire.gov/data) | Nearest-year canopy structure, with the earlier year winning ties | U.S. federal product; cite the LANDFIRE versions |
 | Tree canopy cover | USFS Tree Canopy Cover v2023-5; GEE collection `USGS/NLCD_RELEASES/2023_REL/TCC/v2023-5`; band `NLCD_Percent_Tree_Canopy_Cover` | [Earth Engine catalog](https://developers.google.com/earth-engine/datasets/catalog/USGS_NLCD_RELEASES_2023_REL_TCC_v2023-5) and [MRLC TCC page](https://www.mrlc.gov/data/type/nlcd-tree-canopy-cover) | Annual 30 m TCC matched to fire year and aggregated to the 1 km grid | Collected with U.S. Government funding; use is allowed without additional permission or fees; cite USDA Forest Service v2023.5 |
 | Climate and water balance | gridMET, 2000–2023 | [Climatology Lab gridMET](https://www.climatologylab.org/gridmet.html) | Pre/post-fire precipitation, temperature, VPD, ETo, aridity, hot days, and variability | Cite gridMET and the variables/years used; raw NetCDF files are not redistributed here |
-| Elevation | USGS 3D Elevation Program | [The National Map data delivery](https://www.usgs.gov/the-national-map-data-delivery) | Elevation, slope, northness/eastness, TWI, and roughness | U.S. federal data; cite USGS 3DEP |
+| Elevation | USGS 3D Elevation Program; retained aligned stack `TOPO_STATIC_WesternUS11_1km_5070_v2.tif` | [The National Map data delivery](https://www.usgs.gov/the-national-map-data-delivery) | Elevation, slope, northness/eastness, TWI, and roughness on the EPSG:5070 1 km grid | U.S. federal data; cite USGS 3DEP. The original DEM resolution, tile IDs, and download date were not retained in the historical metadata |
 | Soil | SoilGrids 250 m v2, 0–30 cm soil organic carbon | [ISRIC SoilGrids documentation](https://docs.isric.org/globaldata/soilgrids/) | 0–30 cm soil organic carbon aggregated to the 1 km grid | [CC BY 4.0](https://docs.isric.org/globaldata/soilgrids/SoilGrids_faqs_04.html); cite SoilGrids 2.0 |
-| Land cover and imperviousness | NLCD / Annual NLCD | [MRLC data access](https://www.mrlc.gov/data) | Near-`t0` impervious surface and legacy NLCD forest mask | U.S. federal products; cite the applicable NLCD release |
-| Nighttime lights | VIIRS annual nighttime lights, Earth Observation Group | [EOG VIIRS Nighttime Lights](https://eogdata.mines.edu/products/vnl/) | Near-`t0` nighttime-light intensity | EOG lists VNL among products available under CC BY 4.0; credit EOG and cite the relevant VNL paper/version |
+| Land cover and imperviousness | NLCD 2019 release forest masks and an eight-epoch impervious stack | [MRLC data access](https://www.mrlc.gov/data) and GEE collection `USGS/NLCD_RELEASES/2019_REL/NLCD` | Forest classes 41/42/43 for 2006, 2011, 2016, and 2019; nearest-`t0` imperviousness for 2001, 2004, 2006, 2008, 2011, 2013, 2016, and 2019 | U.S. federal products; cite the NLCD 2019 release. The exact upstream collection used to build the retained impervious stack was not preserved |
+| Nighttime lights | EOG VIIRS annual nighttime lights; retained aligned stack `HUMAN_VIIRS_AnnualMean_WesternUS11_1km_5070_v1.tif` | [EOG VIIRS Nighttime Lights](https://eogdata.mines.edu/products/vnl/) | Annual-mean bands for 2013–2024, with the nearest available year matched to `t0` | EOG lists VNL among products available under CC BY 4.0. The exact VNL product generation/version and download date were not retained, so the original upstream pixels cannot be reconstructed byte-for-byte from this repository alone |
 | Population | Gridded Population of the World v4 | [NASA SEDAC GPWv4](https://sedac.ciesin.columbia.edu/data/collection/gpw-v4) | Near-`t0` or windowed population-pressure predictor | Cite GPWv4 and follow the SEDAC data-use conditions; raw GPW grids are not redistributed here |
-| Roads and trails | OpenStreetMap line data from Geofabrik regional extracts | [Geofabrik U.S. downloads](https://download.geofabrik.de/north-america/us.html) | Exact line length followed by 5 km road and 10 km trail moving-window density | © OpenStreetMap contributors; source database is licensed under [ODbL 1.0](https://www.openstreetmap.org/copyright) |
+| Roads and trails | OSM-derived state/regional shapefile snapshots dated 2026-04-05; retained names follow `*-260405-free.shp/gis_osm_roads_free_1.shp` | [OpenStreetMap copyright and download information](https://www.openstreetmap.org/copyright); [Geofabrik U.S. downloads](https://download.geofabrik.de/north-america/us.html) are a current retrieval route | Exact line length followed by 5 km road and 10 km trail moving-window density | © OpenStreetMap contributors; source database is licensed under [ODbL 1.0](https://www.openstreetmap.org/copyright). Historical metadata did not preserve the download host, so Geofabrik is not asserted as the exact archived provider |
 | Management boundaries | EPA Level III ecoregions | [EPA Level III/IV ecoregions](https://www.epa.gov/eco-research/level-iii-and-iv-ecoregions-continental-united-states) | Aggregation and final management-zone boundaries | U.S. federal data; cite EPA and the downloaded boundary release |
 
 ## Annual RESI derivation
@@ -43,6 +43,37 @@ Annual RESI is generated by [`../src/preprocessing/export_annual_resi_gee.js`](.
 - project export years: 2000–2023;
 - native resolution: 30 m;
 - project analysis value: exact fire year `t0`, aggregated to the 1 km grid.
+
+## Recovered source-snapshot details and remaining limits
+
+The release records all identifiers that can be recovered from the retained code,
+file names, band descriptions, and workflow audits. They establish the following
+details beyond the provider-level links:
+
+- the legacy NLCD forest mask came from GEE collection
+  `USGS/NLCD_RELEASES/2019_REL/NLCD`, using years 2006, 2011, 2016, and 2019,
+  forest classes 41/42/43, and nearest-neighbor sampling to the 1 km grid;
+- the aligned impervious stack contains 2001, 2004, 2006, 2008, 2011, 2013,
+  2016, and 2019 bands, and the candidate-table builder selects the nearest
+  available year to each pixel's `t0`;
+- the aligned VIIRS stack contains 12 annual-mean bands for 2013–2024 in
+  EPSG:5070 at 1 km, with nearest-year matching to `t0`;
+- the aligned topographic stack is EPSG:5070 at 1 km and contains elevation
+  (m), slope (degrees), aspect (degrees), northness, eastness, TWI, and
+  roughness;
+- the OSM-derived input set consists of 12 state/regional snapshots (Arizona,
+  Colorado, Idaho, Montana, Nevada, New Mexico, northern California, Oregon,
+  southern California, Utah, Washington, and Wyoming) dated 2026-04-05.
+
+Four byte-level upstream details could not be recovered from the historical
+metadata: the 3DEP DEM resolution/tile inventory, the exact upstream NLCD
+collection used for the retained impervious stack, the exact EOG VNL product
+generation used for the VIIRS stack, and the download host for the OSM-derived
+shapefiles. These are documented limits rather than silently guessed versions.
+They do not prevent exact reuse of the released analysis-ready table, whose
+bytes and field-level derivations are fixed by the repository manifests and data
+dictionary; they do prevent a claim that every third-party raw pixel can be
+re-downloaded byte-for-byte.
 
 ## Harmonization rules
 

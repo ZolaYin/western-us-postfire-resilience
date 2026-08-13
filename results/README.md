@@ -2,7 +2,7 @@
 
 This directory contains compact outputs needed to verify the manuscript workflow without rerunning every high-performance-computing job:
 
-- `rf/`: final forest-type representation and random-versus-spatial validation metrics;
+- `rf/`: final forest-type representation, random-versus-spatial validation metrics, the regularized-RF sensitivity check, and the 50/100/200 km block-size sensitivity check;
 - `ols/`: global reference-model diagnostics and residual table;
 - `mgwr/`: retained Resistance, integrated-recovery, and stability coefficient tables, bandwidths, and performance summary;
 - `zoning/`: EPA Level III management-zone tables, GeoPackage, thresholds, and run metadata.

@@ -7,7 +7,7 @@ Reproducibility package for a 1 km analysis of post-fire forest resilience acros
 - [Analysis-ready data in this repository](data/): final model table, data dictionary, schema, and deterministic split assignments.
 - [Public Google Drive data release](https://drive.google.com/drive/folders/1C1kPp0hS7RW5zTaVD0c7O88LxmNuJ3wk): downloadable copies of the analysis-ready files, larger derived artifacts, and checksum documentation.
 - [Reproduction instructions](docs/REPRODUCIBILITY.md): environment setup and commands for preprocessing, splitting, modeling, and zoning.
-- [Complete data provenance](docs/DATA_SOURCES.md): product identifiers, variables, transformations, access links, and reuse notes.
+- [Data provenance](docs/DATA_SOURCES.md): recovered product identifiers, variables, transformations, access links, reuse notes, and explicitly documented raw-snapshot limits.
 
 The raw third-party rasters are not repackaged. They remain available from the official providers linked below; project-created tables and results are distributed directly through GitHub and Google Drive.
 
@@ -56,7 +56,7 @@ provenance/             File manifests and checksums
 
 The table contains identifiers, fire timing and severity, resilience responses, raw predictors, selected standardized predictors, WGS84 coordinates, and five broad reporting regions. Field definitions are in [`docs/DATA_DICTIONARY.md`](docs/DATA_DICTIONARY.md). The machine-readable [`westernus_model_table_dictionary.csv`](data/processed/westernus_model_table_dictionary.csv) provides units, temporal windows, derivations, and sources for all 83 columns; [`westernus_model_table_schema.csv`](data/processed/westernus_model_table_schema.csv) records physical types and missingness.
 
-## Complete upstream data sources
+## Upstream data sources
 
 | Input | Official source | Use in this project |
 |---|---|---|
@@ -69,15 +69,17 @@ The table contains identifiers, fire timing and severity, resilience responses, 
 | LANDFIRE EVT and canopy base height | [LANDFIRE Data Distribution](https://landfire.gov/data) | Forest type/mask and near-fire-year canopy structure |
 | USFS Tree Canopy Cover v2023-5 | [Earth Engine catalog](https://developers.google.com/earth-engine/datasets/catalog/USGS_NLCD_RELEASES_2023_REL_TCC_v2023-5) | Annual `NLCD_Percent_Tree_Canopy_Cover` sampled at fire year |
 | gridMET | [Climatology Lab](https://www.climatologylab.org/gridmet.html) | Pre/post-fire climate and water-balance predictors |
-| USGS 3DEP | [The National Map data delivery](https://www.usgs.gov/the-national-map-data-delivery) | Elevation and terrain derivatives |
+| USGS 3DEP | [The National Map data delivery](https://www.usgs.gov/the-national-map-data-delivery) | Elevation and terrain derivatives; the retained 1 km stack is identified, while the original DEM tiles/resolution were not preserved |
 | SoilGrids 250 m v2 | [ISRIC documentation](https://docs.isric.org/globaldata/soilgrids/) | 0–30 cm soil organic carbon |
-| NLCD / Annual NLCD | [MRLC data access](https://www.mrlc.gov/data) | Near-fire-year imperviousness and forest masking |
-| VIIRS annual nighttime lights | [Earth Observation Group](https://eogdata.mines.edu/products/vnl/) | Near-fire-year nighttime-light intensity |
+| NLCD 2019 release / imperviousness | [MRLC data access](https://www.mrlc.gov/data) | Exact forest-mask collection/years/classes are recorded; the eight impervious epochs are listed in the provenance document |
+| VIIRS annual nighttime lights | [Earth Observation Group](https://eogdata.mines.edu/products/vnl/) | Retained 2013–2024 annual stack and nearest-year rule; exact upstream VNL generation was not preserved |
 | GPWv4 population density | [NASA SEDAC](https://sedac.ciesin.columbia.edu/data/collection/gpw-v4) | Population-pressure predictor |
-| OpenStreetMap regional extracts | [Geofabrik U.S. downloads](https://download.geofabrik.de/north-america/us.html) | 5 km road and 10 km trail density |
+| OpenStreetMap-derived regional extracts | [OpenStreetMap attribution/download information](https://www.openstreetmap.org/copyright) | Twelve 2026-04-05 state/regional snapshots; exact historical download host was not preserved |
 | EPA Level III ecoregions | [EPA download page](https://www.epa.gov/eco-research/level-iii-and-iv-ecoregions-continental-united-states) | Management-zone aggregation and boundaries |
 
 Annual RESI is not a missing external dataset: it is produced by [`src/preprocessing/export_annual_resi_gee.js`](src/preprocessing/export_annual_resi_gee.js) from May–September Landsat surface-reflectance composites. The exact TCC collection and export code are recorded in [`src/preprocessing/export_annual_tcc_gee.js`](src/preprocessing/export_annual_tcc_gee.js).
+
+The table is exactly reusable from the distributed Parquet and checksums. Raw-to-table reconstruction is documented to the finest level supported by retained records; [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md#recovered-source-snapshot-details-and-remaining-limits) names the four upstream snapshot details that could not be recovered rather than assigning guessed versions.
 
 ## Broad reporting regions
 
@@ -94,8 +96,9 @@ The `region` field is a deterministic longitude/latitude partition, not an exter
 2. Join topography/soil, forest structure/type, climate, human-footprint, road, and trail drivers.
 3. Generate deterministic random and 100 km spatial-block partitions.
 4. Fit RF M1/M2/M3 forest-type representations and quantify the transferability gap.
-5. Fit the global OLS reference and evaluate residual spatial autocorrelation.
-6. Calibrate GWR/MGWR on the shared 12,000-point sample; optionally run complete-sample MGWR.
-7. Translate local MGWR effects to EPA Level III ecoregion management zones.
+5. Test the RF results under regularized trees and 50/100/200 km block sizes.
+6. Fit the global OLS reference and evaluate residual spatial autocorrelation.
+7. Calibrate GWR/MGWR on the shared 12,000-point sample; optionally run complete-sample MGWR.
+8. Translate local MGWR effects to EPA Level III ecoregion management zones.
 
 Exact commands are in [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md).

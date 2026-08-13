@@ -40,7 +40,7 @@ The first file is the input point table; `points_with_epa_l3_assignment_multires
 
 ## Raw source data
 
-Raw third-party rasters are not mirrored. Use the complete official link table in [`DATA_SOURCES.md`](DATA_SOURCES.md) and run the released preprocessing code. In particular, the annual RESI and TCC Earth Engine collection identifiers and export scripts are fully recorded there.
+Raw third-party rasters are not mirrored. Use the official access table in [`DATA_SOURCES.md`](DATA_SOURCES.md) when rebuilding source layers. The annual RESI and TCC Earth Engine collection identifiers and export scripts are fully recorded there; the same document separately identifies four historical raw-snapshot details that could not be recovered. Exact reuse of the published analysis should therefore begin with the checksum-verified analysis-ready table rather than assume that every upstream raster can be downloaded byte-for-byte again.
 
 ## Integrity check
 

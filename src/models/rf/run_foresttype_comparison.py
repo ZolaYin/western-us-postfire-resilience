@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare RF forest-type encodings under random and 100 km block validation."""
+"""Compare RF forest-type encodings under random and spatial-block validation."""
 from __future__ import annotations
 
 import argparse
@@ -60,6 +60,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--random-state", type=int, default=42)
     parser.add_argument("--test-size", type=float, default=0.2)
     parser.add_argument("--block-km", type=float, default=100.0)
+    parser.add_argument(
+        "--max-depth",
+        type=int,
+        default=None,
+        help="Maximum RF tree depth; default None reproduces the primary unconstrained RF.",
+    )
+    parser.add_argument(
+        "--min-samples-leaf",
+        type=int,
+        default=1,
+        help="Minimum samples per RF leaf; default 1 reproduces the primary RF.",
+    )
     parser.add_argument("--n-jobs", type=int, default=-1)
     parser.add_argument("--sample-n", type=int, default=None, help="Smoke-test row limit.")
     parser.add_argument("--save-predictions", action="store_true")
@@ -166,11 +178,17 @@ def main() -> None:
 
     for response in args.responses:
         for variant, predictors in variants.items():
-            required = ["pixel_id", "x", "y", response, *predictors]
+            # x and y already belong to BASE_PREDS. De-duplicate the selection so
+            # the fitted matrix contains the advertised number of predictors.
+            required = list(dict.fromkeys(["pixel_id", response, *predictors]))
             missing = [column for column in required if column not in df]
             if missing:
                 raise ValueError(f"Missing columns for {response}/{variant}: {missing}")
             work = df[required].replace([np.inf, -np.inf], np.nan).dropna().copy()
+            if not work.columns.is_unique:
+                raise ValueError("RF work table contains duplicate column names")
+            if work[predictors].shape[1] != len(predictors):
+                raise ValueError("RF predictor matrix does not match the declared predictor list")
             splits = (
                 saved_split_positions(work, assignments, response, args.block_km)
                 if assignments is not None
@@ -192,6 +210,9 @@ def main() -> None:
                     n_estimators=args.trees,
                     random_state=args.random_state,
                     n_jobs=args.n_jobs,
+                    max_features=1.0,
+                    max_depth=args.max_depth,
+                    min_samples_leaf=args.min_samples_leaf,
                 )
                 model.fit(train[predictors], train[response])
                 predicted = model.predict(test[predictors])
@@ -251,6 +272,10 @@ def main() -> None:
         "random_state": args.random_state,
         "test_size": args.test_size,
         "block_km": args.block_km,
+        "max_features": 1.0,
+        "max_depth": args.max_depth,
+        "min_samples_leaf": args.min_samples_leaf,
+        "n_jobs": args.n_jobs,
         "sample_n": args.sample_n,
     }
     (output_dir / "run_metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
